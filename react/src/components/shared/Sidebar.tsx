@@ -3,6 +3,8 @@ import classNames from 'classnames';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { HiChevronDown, HiChevronUp, HiOutlineMenu, HiOutlineX, HiOutlineLogout } from 'react-icons/hi';
 import { DASHBOARD_SIDEBAR_LINKS, DASHBOARD_SIDEBAR_BOTTOM_LINKS, LinkType } from '../../lib/constants';
+import { useUser } from '../../context/UserContext';
+import WelcomeMessage from '../WelcomeMessage';
 
 const linkClass = 'flex items-center gap-2 font-light px-3 py-2 hover:bg-neutral-700 hover:text-white hover:no-underline active:bg-neutral-600 rounded-sm text-base';
 
@@ -10,12 +12,10 @@ const Sidebar: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const sidebarRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const { role } = useUser();
 
     const handleLogout = () => {
-        // Thực hiện các hành động logout ở đây (ví dụ: xóa token, gọi API logout, v.v.)
-
-        // Điều hướng người dùng đến trang đăng nhập
-        navigate('/logout');
+        navigate('/login');
     };
 
     const toggleSidebar = () => {
@@ -40,6 +40,10 @@ const Sidebar: React.FC = () => {
         };
     }, [isSidebarOpen]);
 
+
+    //Lọc các liên kết thanh bên dựa trên vai trò người dùng
+    const filteredLinks = DASHBOARD_SIDEBAR_LINKS[role as keyof typeof DASHBOARD_SIDEBAR_LINKS] || [];
+
     return (
         <>
             <div className="lg:hidden p-3">
@@ -50,16 +54,16 @@ const Sidebar: React.FC = () => {
             <div
                 ref={sidebarRef}
                 className={classNames(
-                    "z-50 bg-white p-3 flex flex-col fixed lg:static top-0 left-0 h-full lg:h-auto transition-transform transform lg:transform-none",
+                    "z-50 bg-white p-3 w-[14%] flex flex-col fixed lg:static top-0 left-0 h-full lg:h-auto transition-transform transform lg:transform-none",
                     { "-translate-x-full": !isSidebarOpen, "translate-x-0": isSidebarOpen }
                 )}
             >
                 <div className="flex items-center gap-2 px-1 py-3">
                     <img className="size-16 h-auto" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/VKU_Verkehrsunfall_und_Fahrzeugtechnik_Logo.svg/531px-VKU_Verkehrsunfall_und_Fahrzeugtechnik_Logo.svg.png?20150911085140" alt="" />
-                    <span className="font-semibold text-[0.8rem]">Xin chào,<p> BÙI QUỐC VĂN</p></span>
+                    <WelcomeMessage />
                 </div>
                 <div className="py-8 flex flex-1 flex-col gap-0.5">
-                    {DASHBOARD_SIDEBAR_LINKS.map((link) => (
+                    {filteredLinks.map((link) => (
                         <SidebarLink key={link.key} link={link} />
                     ))}
                 </div>

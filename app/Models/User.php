@@ -1,47 +1,49 @@
 <?php
 
+// app/Models/User.php
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Factories\HasFactory; // Thêm dòng này
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    protected $primaryKey = 'id'; // Xác định cột khóa chính
+    public $incrementing = false; // Không tự động tăng
+    protected $keyType = 'string'; // Loại của khóa chính là string
+
     protected $fillable = [
+        'id',
         'name',
         'email',
         'password',
+        'role'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    // Hàm để tự động mã hóa mật khẩu khi lưu người dùng
+    public static function boot()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        parent::boot();
+
+        static::creating(function ($user) {
+            if ($user->isDirty('password')) {
+
+                $user->password = Hash::make($user->password);
+            }
+        });
     }
 }

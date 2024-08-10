@@ -1,12 +1,7 @@
 // lib/constants.ts
 import React, { useState, useEffect, useRef } from 'react';
+import { HiOutlineViewGrid, HiOutlineIdentification, HiOutlineCog, HiOutlineQuestionMarkCircle, HiOutlineCube } from 'react-icons/hi';
 
-import {
-	HiOutlineViewGrid,
-	HiOutlineCube,
-	HiOutlineQuestionMarkCircle,
-	HiOutlineCog,
-} from 'react-icons/hi';
 
 export interface LinkType {
 	key: string;
@@ -16,38 +11,63 @@ export interface LinkType {
 	subLinks?: { key: string; label: string; path: string }[];
 }
 
-export const DASHBOARD_SIDEBAR_LINKS: LinkType[] = [
-	{
-		key: 'dashboard',
-		label: 'Trang chủ',
-		path: '/',
-		icon: <HiOutlineViewGrid />
-	},
-	{
-		key: 'products',
-		label: 'Đăng kí',
-		path: '',
-		icon: <HiOutlineCube />,
-		subLinks: [
-			{
-				key: 'listProducts',
-				label: 'Hoãn thi',
-				path: '/admin/hoanthi',
-			},
-			{
-				key: 'gridProducts',
-				label: 'Vắng thi',
-				path: '/admin/vangthi',
-			},
-		]
-	},
-	{
-		key: 'hoanthiVangThi',
-		label: 'Đăng kí hoãn thi, vắng thi',
-		path: '/admin/hoanthi-vangthi',
-		icon: <HiOutlineViewGrid />
-	},
-];
+
+export const DASHBOARD_SIDEBAR_LINKS: { [key: string]: LinkType[] } = {
+	student: [
+		{
+			key: 'sv_dashboard',
+			label: 'Trang chủ Sinh Viên',
+			path: '/sinhvien/dashboard',
+			icon: <HiOutlineViewGrid />
+		},
+		{
+			key: 'sv_register',
+			label: 'Đăng kí',
+			path: '',
+			icon: <HiOutlineCube />,
+			subLinks: [
+				{
+					key: 'sv_register_hoanthi',
+					label: 'Hoãn thi',
+					path: '/sinhvien/dashboard/hoanthi',
+				},
+				{
+					key: 'sv_register_vangthi',
+					label: 'Vắng thi',
+					path: '/sinhvien/dashboard/vangthi',
+				},
+			]
+		}
+	],
+	faculty: [
+		{
+			key: 'k_dashboard',
+			label: 'Trang chủ Khoa',
+			path: '/khoa/dashboard',
+			icon: <HiOutlineViewGrid />
+		},
+		{
+			key: 'k_notification',
+			label: 'Thông báo',
+			path: '/khoa/dashboard/notification',
+			icon: <HiOutlineIdentification />,
+		}
+	],
+	examDept: [
+		{
+			key: 'kt_dashboard',
+			label: 'Trang chủ Khảo Thí',
+			path: '/khaothi/dashboard',
+			icon: <HiOutlineViewGrid />
+		},
+		{
+			key: 'kt_notification',
+			label: 'Thông báo',
+			path: '/khaothi/dashboard/notification',
+			icon: <HiOutlineIdentification />,
+		}
+	]
+};
 
 export const DASHBOARD_SIDEBAR_BOTTOM_LINKS: LinkType[] = [
 	{
@@ -62,5 +82,5 @@ export const DASHBOARD_SIDEBAR_BOTTOM_LINKS: LinkType[] = [
 		path: '/support',
 		icon: <HiOutlineQuestionMarkCircle />
 	}
-	
+
 ];
