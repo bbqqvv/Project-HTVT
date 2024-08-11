@@ -45,7 +45,7 @@ const HoanThiPage: React.FC = () => {
     setSelectedCourses(selectedItems);
   };
 
-  return (
+return (
     <div className="bg-gray-100">
       <TopNotification />
       <ExamTable
@@ -99,3 +99,4 @@ const HoanThiPage: React.FC = () => {
 };
 
 export default HoanThiPage;
+
