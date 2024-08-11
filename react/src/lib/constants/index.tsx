@@ -28,13 +28,13 @@ export const DASHBOARD_SIDEBAR_LINKS: { [key: string]: LinkType[] } = {
 			subLinks: [
 				{
 					key: 'sv_register_hoanthi',
-					label: 'Hoãn thi',
-					path: '/sinhvien/dashboard/hoanthi',
+					label: 'Vắng thi',
+					path: '/sinhvien/dashboard/vangthi',
 				},
 				{
 					key: 'sv_register_vangthi',
-					label: 'Vắng thi',
-					path: '/sinhvien/dashboard/vangthi',
+					label: 'Hoãn thi',
+					path: '/sinhvien/dashboard/hoanthi',
 				},
 			]
 		}

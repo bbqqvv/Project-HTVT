@@ -5,6 +5,8 @@ use App\Http\Controllers\KhaoThiController;
 use App\Http\Controllers\KhoaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\RequestController;
 
 
 Route::post('/register', [UserController::class, 'register']);
@@ -28,8 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/khaothi/dashboard', [KhaoThiController::class, 'index']);
     });
 });
-
-
-
-
-// Route::get('/user/{id}', [UserController::class, 'show']);
+Route::get('/courses', [CourseController::class, 'index']);
+Route::get('requests', [RequestController::class, 'index']);
+Route::get('requests/{id}', [RequestController::class, 'show']);
+Route::post('requests', [RequestController::class, 'store']);
+Route::put('requests/{id}', [RequestController::class, 'update']);
+Route::delete('requests/{id}', [RequestController::class, 'destroy']);

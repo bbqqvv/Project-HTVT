@@ -18,7 +18,6 @@ class UsersTableSeeder extends Seeder
         // Tạo tài khoản cho Khoa
         DB::table('users')->insert([
             'id' => 'KKHMT',
-
             'name' => 'Khoa Khoa Học Máy Tính',
             'email' => 'khoakhmt@vku.udn.vn',
             'password' => Hash::make('password'),
@@ -30,7 +29,6 @@ class UsersTableSeeder extends Seeder
         // Tạo tài khoản cho Khoa Thương Mại Điện Tử
         DB::table('users')->insert([
             'id' => 'KTMDT',
-
             'name' => 'Khoa Thương Mại Điện Tử',
             'email' => 'khoatmdt@vku.udn.vn',
             'password' => Hash::make('password'),
@@ -43,7 +41,7 @@ class UsersTableSeeder extends Seeder
         DB::table('users')->insert([
             'id' => 'PKT',
             'name' => 'Phòng Khảo Thí',
-            'email' => 'examdept@example.com',
+            'email' => 'khaothi@vku.udn.vn',
             'password' => Hash::make('password'),
             'role' => 'examDept',
             'created_at' => now(),

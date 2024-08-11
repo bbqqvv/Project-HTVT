@@ -3,7 +3,7 @@ import React, { useState, ChangeEvent } from 'react';
 const SelectSemester: React.FC = () => {
     const [semester, setSemester] = useState<string>("3");
     const [academicYear, setAcademicYear] = useState<string>("7");
-    const [isOpen, setIsOpen] = useState<boolean>(false); // Thêm trạng thái để kiểm soát việc hiển thị menu
+    const [isOpen, setIsOpen] = useState<boolean>(false);
 
     const handleSemesterChange = (event: ChangeEvent<HTMLSelectElement>) => {
         setSemester(event.target.value);
@@ -18,25 +18,23 @@ const SelectSemester: React.FC = () => {
     };
 
     const toggleMenu = () => {
-        setIsOpen(!isOpen); // Đổi trạng thái hiển thị menu
+        setIsOpen(!isOpen);
     };
 
     return (
-        <div className="relative">
-            <div className="inline-block">
-                <button
-                    className=" text-gray-700"
-                    onClick={toggleMenu} // Thay đổi trạng thái khi bấm vào nút
-                >
-                    Học kỳ Hè - 2023-2024
-                    <span className="ml-2 fa fa-angle-down"></span>
-                </button>
-                <ul
-                    className={`absolute right-0 mt-5 w-96 bg-white border border-gray-200 rounded shadow-lg z-10 ${isOpen ? 'block' : 'hidden'}`}
-                >
+        <div className="relative inline-block">
+            <button
+                className="flex items-center text-gray-700"
+                onClick={toggleMenu}
+            >
+                Học kỳ {semester} - {academicYear}
+                <span className="ml-2 fa fa-angle-down"></span>
+            </button>
+            {isOpen && (
+                <ul className="absolute right-0 mt-2 w-96 bg-white border border-gray-200 rounded shadow-lg z-10">
                     <li>
-                        <div className="p-4 flex space-x-5">
-                            <div className="mb-4 ">
+                        <div className="p-4 flex space-x-4">
+                            <div className="flex-1">
                                 <label htmlFor="hocky" className="block text-gray-700">Học kỳ:</label>
                                 <select
                                     name="hocky"
@@ -50,11 +48,12 @@ const SelectSemester: React.FC = () => {
                                     <option value="3">Học kỳ hè</option>
                                 </select>
                             </div>
-                            <div className="mb-4">
+                            <div className="flex-1">
                                 <label htmlFor="namhoc" className="block text-gray-700">Năm học:</label>
                                 <select
-                                    className="w-full mt-1 p-2 border border-gray-300 rounded"
+                                    name="namhoc"
                                     id="namhoc"
+                                    className="w-full mt-1 p-2 border border-gray-300 rounded"
                                     value={academicYear}
                                     onChange={handleYearChange}
                                 >
@@ -70,13 +69,19 @@ const SelectSemester: React.FC = () => {
                                     <option value="10">2026 - 2027</option>
                                 </select>
                             </div>
-                            <div className="flex items-center mt-2">
-                                <button type="button" className="bg-blue-500 text-white px-4 py-2 rounded" onClick={changeSemester}>OK</button>
-                            </div>
+                        </div>
+                        <div className="flex justify-end p-4">
+                            <button
+                                type="button"
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                onClick={changeSemester}
+                            >
+                                OK
+                            </button>
                         </div>
                     </li>
                 </ul>
-            </div>
+            )}
         </div>
     );
 };

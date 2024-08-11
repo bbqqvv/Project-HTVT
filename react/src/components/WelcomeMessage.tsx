@@ -6,7 +6,7 @@ const WelcomeMessage: React.FC = () => {
 
     return (
         <span className="font-semibold text-[0.8rem]">
-            Xin chào,<p>{name}</p>
+            Xin chào,<p className=''>{name}</p>
         </span>
     );
 };

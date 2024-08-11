@@ -14,6 +14,15 @@ class DatabaseSeeder extends Seeder
     // database/seeders/DatabaseSeeder.php
     public function run()
     {
-        $this->call(UsersTableSeeder::class);
+        $this->call([
+            UsersTableSeeder::class,
+            FacultiesTableSeeder::class,
+            StudentsTableSeeder::class,
+            TuitionFeesTableSeeder::class,
+            RequestSeeder::class,
+            SemestersTableSeeder::class,
+            CoursesTableSeeder::class, // Ví dụ về các seeder khác
+            StudentCoursesTableSeeder::class,
+        ]);
     }
 }

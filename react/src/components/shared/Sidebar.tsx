@@ -13,10 +13,27 @@ const Sidebar: React.FC = () => {
     const sidebarRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const { role } = useUser();
+    const [loading, setLoading] = useState(false);
 
-    const handleLogout = () => {
-        navigate('/login');
+    const handleLogout = async () => {
+        setLoading(true);
+        // Giả lập thời gian chờ để đăng xuất
+        try {
+            // Thực hiện gọi API hoặc logic đăng xuất ở đây
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            // Sau khi đăng xuất thành công
+            // Chuyển hướng hoặc thực hiện hành động khác
+        } catch (error) {
+            // Xử lý lỗi nếu có
+            console.error('Logout failed:', error);
+        } finally {
+            setLoading(false);
+            navigate('/login')
+
+        }
     };
+
+
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
@@ -40,26 +57,27 @@ const Sidebar: React.FC = () => {
         };
     }, [isSidebarOpen]);
 
-
     //Lọc các liên kết thanh bên dựa trên vai trò người dùng
     const filteredLinks = DASHBOARD_SIDEBAR_LINKS[role as keyof typeof DASHBOARD_SIDEBAR_LINKS] || [];
 
     return (
         <>
-            <div className="lg:hidden p-3">
+            {/* Nút mở sidebar trên mobile */}
+            <div className="lg:hidden p-3 fixed top-0 left-0 z-50">
                 <button onClick={toggleSidebar} className="text-black">
                     {isSidebarOpen ? <HiOutlineX fontSize={24} /> : <HiOutlineMenu fontSize={24} />}
                 </button>
             </div>
+            {/* Sidebar */}
             <div
                 ref={sidebarRef}
                 className={classNames(
-                    "z-50 bg-white p-3 w-[14%] flex flex-col fixed lg:static top-0 left-0 h-full lg:h-auto transition-transform transform lg:transform-none",
+                    "z-40 bg-white p-3 w-[70%] sm:w-[50%] md:w-[30%] lg:w-[14%] flex flex-col fixed lg:static top-0 left-0 h-full lg:h-auto transition-transform transform lg:transform-none",
                     { "-translate-x-full": !isSidebarOpen, "translate-x-0": isSidebarOpen }
                 )}
             >
                 <div className="flex items-center gap-2 px-1 py-3">
-                    <img className="size-16 h-auto" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/VKU_Verkehrsunfall_und_Fahrzeugtechnik_Logo.svg/531px-VKU_Verkehrsunfall_und_Fahrzeugtechnik_Logo.svg.png?20150911085140" alt="" />
+                    <img className="w-[5rem] h-auto" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/VKU_Verkehrsunfall_und_Fahrzeugtechnik_Logo.svg/531px-VKU_Verkehrsunfall_und_Fahrzeugtechnik_Logo.svg.png?20150911085140" alt="" />
                     <WelcomeMessage />
                 </div>
                 <div className="py-8 flex flex-1 flex-col gap-0.5">
@@ -71,14 +89,26 @@ const Sidebar: React.FC = () => {
                     {DASHBOARD_SIDEBAR_BOTTOM_LINKS.map((link) => (
                         <SidebarLink key={link.key} link={link} />
                     ))}
-                    <div className={classNames(linkClass, 'cursor-pointer text-red-500')} onClick={handleLogout}>
+                    <div
+                        className={classNames('cursor-pointer text-red-500 flex items-center ml-[0.8rem]', { 'opacity-50': loading })}
+                        onClick={handleLogout}
+                    >
                         <span className="text-xl">
                             <HiOutlineLogout />
                         </span>
-                        Logout
+                        {loading ? (
+                            <div className="ml-2 flex items-center">
+                                <div className="w-4 h-4 border-4 border-t-4 border-red-500 border-solid rounded-full animate-spin"></div>
+                                <span className="ml-2">Logging out...</span>
+                            </div>
+                        ) : (
+                            'Logout'
+                        )}
                     </div>
                 </div>
             </div>
+            {/* Overlay để đóng sidebar khi click ra ngoài trên mobile */}
+            {isSidebarOpen && <div className="fixed inset-0 bg-black opacity-50 lg:hidden" onClick={toggleSidebar}></div>}
         </>
     );
 };

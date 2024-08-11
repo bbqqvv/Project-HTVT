@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
+import Pagination from '../components/Pagination';
+import ModalStudent from '../components/ModalStudent';
+import TableKhoa from '../components/TableKhoa';
 
-interface Student {
+export interface Student {
     id: number;
     studentId: string;
     name: string;
@@ -58,16 +61,28 @@ const initialStudents: Student[] = [
         departmentNotes: '',
         status: 'Xét duyệt',
     },
+    {
+        id: 5,
+        studentId: '22IT.B249',
+        name: 'Mai Nguyễn',
+        requestType: 'Vắng Thi',
+        submissionDate: '01/01/2023',
+        certificate: 'minhchung.pnj',
+        studentNotes: '',
+        departmentNotes: '',
+        status: 'Xét duyệt',
+    },
 
     // Thêm các sinh viên khác nếu cần
 ];
 
-const StudentTable: React.FC = () => {
+const KhoaPage: React.FC = () => {
     const [students, setStudents] = useState<Student[]>(initialStudents);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const studentsPerPage = 6;
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const studentsPerPage = 8; // Number of students per page
+    const totalPages = Math.ceil(students.length / studentsPerPage);
 
     const handleConfirm = (id: number) => {
         const student = students.find((s) => s.id === id);
@@ -102,149 +117,39 @@ const StudentTable: React.FC = () => {
         );
     };
 
-    // Tính toán số sinh viên cần hiển thị trên mỗi trang
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
     const indexOfLastStudent = currentPage * studentsPerPage;
     const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
     const currentStudents = students.slice(indexOfFirstStudent, indexOfLastStudent);
 
-    return (
-        <div className="container mx-auto w-full">
-            <div className='bg-white pb-1 pt-2'>
-                <h1 className="text-center text-2xl font-bold mb-4">THÔNG TIN HOÀN THI - VẮNG THI SINH VIÊN</h1>
-            </div>
-            <table className="min-w-full bg-white border border-gray-300 mt-2">
-                <thead>
-                    <tr>
-                        <th className="border px-4 py-2">STT</th>
-                        <th className="border px-4 py-2">Mã sinh viên</th>
-                        <th className="border px-4 py-2">Tên sinh viên</th>
-                        <th className="border px-4 py-2 cursor-pointer">Loại yêu cầu</th>
-                        <th className="border px-4 py-2">Ngày nộp</th>
-                        <th className="border px-4 py-2">Minh chứng</th>
-                        <th className="border px-4 py-2">Ghi chú SV</th>
-                        <th className="border px-4 py-2">Ghi chú KHOA</th>
-                        <th className="border px-4 py-2">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentStudents.map((student) => (
-                        <tr
-                            key={student.id}
-                            className="hover:bg-gray-100"
-                        >
-                            <td
-                                className="border px-4 py-2 hover:bg-gray-100"
-                                onClick={() => openModal(student)}
-                            >
-                                {student.id}
-                            </td>
-                            <td
-                                className="border px-4 py-2 hover:bg-gray-100"
-                                onClick={() => openModal(student)}
-                            >
-                                {student.studentId}
-                            </td>
-                            <td
-                                className="border px-4 py-2 hover:bg-gray-100"
-                                onClick={() => openModal(student)}
-                            >
-                                {student.name}
-                            </td>
-                            <td
-                                className="border px-4 py-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => openModal(student)}
-                            >
-                                {student.requestType}
-                            </td>
-                            <td
-                                className="border px-4 py-2 hover:bg-gray-100"
-                                onClick={() => openModal(student)}
-                            >
-                                {student.submissionDate}
-                            </td>
-                            <td className="border px-4 py-2">{student.certificate}</td>
-                            <td className="border px-4 py-2">
-                                <textarea
-                                    className="border rounded p-1 w-full"
-                                    value={student.studentNotes}
-                                    onChange={(e) => handleNotesChange(student.id, 'studentNotes', e.target.value)}
-                                />
-                            </td>
-                            <td className="border px-4 py-2">
-                                <textarea
-                                    placeholder='Khoa ghi chú tại đây'
-                                    className="border rounded p-1 w-full"
-                                    value={student.departmentNotes}
-                                    onChange={(e) => handleNotesChange(student.id, 'departmentNotes', e.target.value)}
-                                />
-                            </td>
-                            <td className="border px-4 py-2">
-                                <select
-                                    className="border rounded p-1"
-                                    value={student.status}
-                                    onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                                >
-                                    <option value="Xét duyệt">Xét duyệt</option>
-                                    <option value="Từ chối">Từ chối</option>
-                                </select>
-                                <button
-                                    onClick={() => handleConfirm(student.id)}
-                                    className="ml-2 bg-green-500 text-white px-2 py-1 rounded"
-                                >
-                                    Xác nhận
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+    const handleStudentClick = (student: Student) => {
+        openModal(student);
+    };
 
-            {/* Modal */}
-            <Modal isOpen={isModalOpen} onRequestClose={closeModal} className="fixed inset-0 flex items-center justify-center z-50 ">
-                <div className="bg-white p-6 rounded-2xl shadow-lg">
-                    <h2 className="text-sm font-bold mb-4">Thông tin chi tiết hoãn thi <i className='text-red-600'>Bui Quoc Van</i> </h2>
-                    {selectedStudent && (
-                        <div>
-                            <table className=" bg-gray-100 border border-gray-300">
-                                <thead>
-                                    <tr>
-                                        <th className="border px-4 py-2">Tên lớp học phần</th>
-                                        <th className="border px-4 py-2">Giảng viên</th>
-                                        <th className="border px-4 py-2">Số TC</th>
-                                        <th className="border px-4 py-2">Hình thức thi</th>
-                                        <th className="border px-4 py-2">Ngày thi</th>
-                                        <th className="border px-4 py-2">Giờ thi</th>
-                                        <th className="border px-4 py-2">Phòng thi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr className='bg-white'>
-                                        <td className="border px-4 py-2">Môn học A</td>
-                                        <td className="border px-4 py-2">Giảng viên A</td>
-                                        <td className="border px-4 py-2">3</td>
-                                        <td className="border px-4 py-2">Thi viết</td>
-                                        <td className="border px-4 py-2">10/06/2024</td>
-                                        <td className="border px-4 py-2">08:00</td>
-                                        <td className="border px-4 py-2">Phòng 101</td>
-                                    </tr>
-                                    <tr className='bg-white'>
-                                        <td className="border px-4 py-2">Môn học A</td>
-                                        <td className="border px-4 py-2">Giảng viên A</td>
-                                        <td className="border px-4 py-2">3</td>
-                                        <td className="border px-4 py-2">Thi viết</td>
-                                        <td className="border px-4 py-2">10/06/2024</td>
-                                        <td className="border px-4 py-2">08:00</td>
-                                        <td className="border px-4 py-2">Phòng 101</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                    <button onClick={closeModal} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded float-end">Đóng</button>
-                </div>
-            </Modal>
+    return (
+        <div className="container mx-auto p-4">
+            <TableKhoa
+                students={students}
+                onStudentClick={handleStudentClick}
+                onStatusChange={handleStatusChange}
+                onNotesChange={handleNotesChange}
+                onConfirm={handleConfirm}
+            />
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+            />
+            <ModalStudent
+                isOpen={isModalOpen}
+                onRequestClose={closeModal}
+                student={selectedStudent}
+            />
         </div>
     );
 };
 
-export default StudentTable;
+export default KhoaPage;

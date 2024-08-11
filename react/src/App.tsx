@@ -3,12 +3,13 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/shared/Layout';
 import Login from './pages/Login';
-// import HoanThiPage from './pages/HoanThiPage';
-// import VangThiPage from './pages/VangThiPage';
+
 import KhoaPage from './pages/KhoaPage';
 import KhaoThiPage from './pages/KhaoThiPage';
 
 import { UserProvider } from './context/UserContext';
+import HoanThiPage from './pages/HoanThiPage';
+import VangThiPage from './pages/VangThiPage';
 
 const App: React.FC = () => {
     return (
@@ -18,10 +19,10 @@ const App: React.FC = () => {
                     <Route path="/login" element={<Login />} />
 
                     {/* Routes for SinhVien */}
-                    {/* <Route path="/sinhvien/dashboard" element={<Layout />}>
+                    <Route path="/sinhvien/dashboard" element={<Layout />}>
                         <Route path="/sinhvien/dashboard/hoanthi" element={<HoanThiPage />} />
                         <Route path="/sinhvien/dashboard/vangthi" element={<VangThiPage />} />
-                    </Route> */}
+                    </Route>
 
                     {/* Routes for Khoa */}
                     <Route path="/khoa/dashboard" element={<Layout />}>
