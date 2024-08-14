@@ -15,10 +15,18 @@ const Login: React.FC = () => {
       const response = await axios.post('http://127.0.0.1:8000/api/login', { email, password });
       const { access_token, user } = response.data;
 
-      // Lưu token, vai trò người dùng và tên người dùng vào localStorage
       localStorage.setItem('token', access_token);
       localStorage.setItem('userRole', user.role);
-      localStorage.setItem('userName', user.name); // Lưu tên người dùng
+      localStorage.setItem('userName', user.name);
+      localStorage.setItem('userId', user.id);
+
+
+      const storedUserId = localStorage.getItem('userId');
+      if (storedUserId) {
+        console.log('userId successfully saved:', storedUserId);
+      } else {
+        console.log('userId not saved');
+      }
 
       // Chuyển hướng đến trang dashboard tương ứng
       if (user.role === 'student') {

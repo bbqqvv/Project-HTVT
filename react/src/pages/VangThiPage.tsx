@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ExamTable from '../components/ExamTable';
 import ActionPanel from '../components/ActionPanel';
 import StatusPanel from '../components/StatusPanel';
 import Modal from '../components/Modal';
 import TopNotification from '../components/TopNotification';
 import BottomNotification from '../components/BottomNotification';
+import { useUser } from '../context/UserContext';
 
 interface Course {
   course_id: string;
-  [key: string]: any; // Other properties of the course
+  course_name: string;
 }
 
 const VangThiPage: React.FC = () => {
+  const { id: student_id } = useUser(); // Lấy id từ context
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null);
+  const [evidenceUrls, setEvidenceUrls] = useState<string[]>([]);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedCourses, setSelectedCourses] = useState<Course[]>([]);
+
+  useEffect(() => {
+    return () => {
+      evidenceUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [evidenceUrls]);
 
   const handleModalOpen = () => {
     setIsModalOpen(true);
@@ -25,25 +34,87 @@ const VangThiPage: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const handleUpload = (file: File | null) => {
-    if (file) {
-      const fileUrl = URL.createObjectURL(file);
-      setEvidenceUrl(fileUrl);
+  const handleUpload = (files: File[] | null) => {
+    if (files) {
+      const fileUrls = files.map(file => URL.createObjectURL(file));
+      setEvidenceUrls(fileUrls);
     }
-    setIsModalOpen(false); // Close modal after upload
+    setIsModalOpen(false);
   };
 
-  const handleImageClick = () => {
+  const handleImageClick = (url: string) => {
+    setSelectedImageUrl(url);
     setIsImageModalOpen(true);
   };
 
   const handleImageModalClose = () => {
     setIsImageModalOpen(false);
+    setSelectedImageUrl(null);
   };
 
   const handleSelectionChange = (selectedItems: Course[]) => {
     setSelectedCourses(selectedItems);
   };
+
+  const handleConfirm = async () => {
+    if (!student_id) {
+      alert('Vui lòng đăng nhập để tiếp tục.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('request_id', generateRequestId()); // Tạo request_id mới
+    formData.append('request_type', 'Vắng thi');
+    formData.append('student_id', student_id);
+
+    // Thêm môn học đã chọn vào formData
+    selectedCourses.forEach((course, index) => {
+      formData.append(`selected_courses[${index}][course_id]`, course.course_id);
+      formData.append(`selected_courses[${index}][course_name]`, course.course_name);
+    });
+
+    if (evidenceUrls.length > 0) {
+      evidenceUrls.forEach((url, index) => {
+        formData.append(`evidence[${index}]`, url);
+      });
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/requests', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Yêu cầu vắng thi đã được gửi thành công!');
+        setSelectedCourses([]); // Xóa môn học đã chọn sau khi gửi
+        setEvidenceUrls([]); // Xóa các file đã tải lên
+      } else {
+        console.error('Lỗi khi gửi dữ liệu:', data);
+        alert('Có lỗi xảy ra khi gửi yêu cầu.');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Lỗi khi gửi dữ liệu:', error.message);
+        alert('Có lỗi xảy ra khi gửi yêu cầu.');
+      } else {
+        console.error('Đã xảy ra lỗi không xác định:', error);
+        alert('Có lỗi xảy ra khi gửi yêu cầu.');
+      }
+    }
+  };
+
+  const generateRequestId = (): string => {
+    const currentCount = Number(localStorage.getItem('request_id_count') || '0');
+    const newCount = currentCount + 1;
+    localStorage.setItem('request_id_count', newCount.toString());
+    return `RQ${newCount.toString().padStart(4, '0')}`;
+  };
+
+  if (!student_id) {
+    return <div>Vui lòng đăng nhập để tiếp tục.</div>;
+  }
 
   return (
     <div className="bg-gray-100">
@@ -54,23 +125,23 @@ const VangThiPage: React.FC = () => {
       />
       <div className="flex gap-4 mb-6">
         <ActionPanel
-          onConfirm={handleModalOpen} // Opens modal to confirm the action
-          onUpload={handleUpload} // Handles the file upload
-          selectedCourses={selectedCourses} // Pass the selected courses here
-          requestType="Vắng thi"
+          onConfirm={handleConfirm}
+          onUpload={handleUpload}
+          selectedCourses={selectedCourses}
+          request_type="Vắng thi"
         />
         <StatusPanel
-          evidenceUrl={evidenceUrl}
+          evidenceUrls={evidenceUrls}
           onImageClick={handleImageClick}
         />
       </div>
       {isModalOpen && (
         <Modal
           onClose={handleModalClose}
-          onUpload={handleUpload} // Handles the file upload within the modal
+          onUpload={handleUpload}
         />
       )}
-      {isImageModalOpen && evidenceUrl && (
+      {isImageModalOpen && selectedImageUrl && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           onClick={handleImageModalClose}
@@ -80,7 +151,7 @@ const VangThiPage: React.FC = () => {
             onClick={e => e.stopPropagation()}
           >
             <img
-              src={evidenceUrl}
+              src={selectedImageUrl}
               alt="Enlarged Evidence"
               className="max-w-full max-h-full"
             />

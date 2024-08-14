@@ -15,8 +15,11 @@ class RequestResource extends JsonResource
             'status' => $this->status,
             'submission_date' => $this->submission_date,
             'evidence' => $this->evidence ? json_decode($this->evidence, true) : [],
-            'notes' => $this->notes,
+            'student_notes' => $this->student_notes,
+            'faculty_notes' => $this->faculty_notes,
+            'exam_department_notes' => $this->exam_department_notes,
             'approved_by' => $this->approved_by,
+            'selected_courses' => $this->selected_courses ? json_decode($this->selected_courses, true) : [],
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

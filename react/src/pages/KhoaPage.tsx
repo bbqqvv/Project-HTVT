@@ -5,74 +5,52 @@ import ModalStudent from '../components/ModalStudent';
 import TableKhoa from '../components/TableKhoa';
 
 export interface Student {
-    id: number;
-    studentId: string;
-    name: string;
-    requestType: string;
-    submissionDate: string;
-    certificate: string;
-    studentNotes: string;
-    departmentNotes: string;
-    status: string;
+    request_id: string;
+    student_id: string;
+    request_type: string;
+    status: number;
+    submission_date: string;
+    approved_by: string | null;
+    evidence: string;
+    student_notes: string;
+    faculty_notes: string;
+    exam_department_notes: string;
+    selected_courses: string;
+    created_at: string;
+    updated_at: string;
 }
 
 const initialStudents: Student[] = [
     {
-        id: 1,
-        studentId: '22IT.B239',
-        name: 'BÙI QUỐC VĂN',
-        requestType: 'Hoãn Thi',
-        submissionDate: '01/01/2023',
-        certificate: 'minhchung.pnj',
-        studentNotes: '',
-        departmentNotes: '',
-        status: 'Xét duyệt',
+        request_id: '1',
+        student_id: '22IT.B239',
+        request_type: 'Hoãn Thi',
+        status: 1,
+        submission_date: '2023-01-01',
+        approved_by: null,
+        evidence: 'minhchung.pnj',
+        student_notes: '',
+        faculty_notes: '',
+        exam_department_notes: '',
+        selected_courses: '',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
     },
     {
-        id: 2,
-        studentId: '22IT.B239',
-        name: 'KIM SA',
-        requestType: 'Vắng Thi',
-        submissionDate: '01/01/2023',
-        certificate: 'minhchung.pnj',
-        studentNotes: '',
-        departmentNotes: '',
-        status: 'Xét duyệt',
+        request_id: '2',
+        student_id: '22IT.B239',
+        request_type: 'Vắng Thi',
+        status: 1,
+        submission_date: '2023-01-01',
+        approved_by: null,
+        evidence: 'minhchung.pnj',
+        student_notes: '',
+        faculty_notes: '',
+        exam_department_notes: '',
+        selected_courses: '',
+        created_at: '2023-01-01',
+        updated_at: '2023-01-01',
     },
-    {
-        id: 3,
-        studentId: '22IT.B239',
-        name: 'La Bàn',
-        requestType: 'Hoãn Thi',
-        submissionDate: '01/01/2023',
-        certificate: 'minhchung.pnj',
-        studentNotes: '',
-        departmentNotes: '',
-        status: 'Xét duyệt',
-    },
-    {
-        id: 4,
-        studentId: '22IT.B239',
-        name: 'KAKAK ROT',
-        requestType: 'Vắng Thi',
-        submissionDate: '01/01/2023',
-        certificate: 'minhchung.pnj',
-        studentNotes: '',
-        departmentNotes: '',
-        status: 'Xét duyệt',
-    },
-    {
-        id: 5,
-        studentId: '22IT.B249',
-        name: 'Mai Nguyễn',
-        requestType: 'Vắng Thi',
-        submissionDate: '01/01/2023',
-        certificate: 'minhchung.pnj',
-        studentNotes: '',
-        departmentNotes: '',
-        status: 'Xét duyệt',
-    },
-
     // Thêm các sinh viên khác nếu cần
 ];
 
@@ -81,13 +59,13 @@ const KhoaPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const studentsPerPage = 8; // Number of students per page
+    const studentsPerPage = 8;
     const totalPages = Math.ceil(students.length / studentsPerPage);
 
-    const handleConfirm = (id: number) => {
-        const student = students.find((s) => s.id === id);
+    const handleConfirm = (id: string) => {
+        const student = students.find((s) => s.request_id === id);
         if (student) {
-            alert(`Đã gửi yêu cầu ${student.status} cho sinh viên ${student.name}`);
+            alert(`Đã gửi yêu cầu ${student.status === 1 ? 'Xét duyệt' : 'Từ chối'} cho sinh viên ${student.student_id}`);
         }
     };
 
@@ -101,18 +79,18 @@ const KhoaPage: React.FC = () => {
         setSelectedStudent(null);
     };
 
-    const handleNotesChange = (id: number, field: 'studentNotes' | 'departmentNotes', value: string) => {
+    const handleNotesChange = (id: string, field: 'student_notes' | 'faculty_notes' | 'exam_department_notes', value: string) => {
         setStudents((prev) =>
             prev.map((student) =>
-                student.id === id ? { ...student, [field]: value } : student
+                student.request_id === id ? { ...student, [field]: value } : student
             )
         );
     };
 
-    const handleStatusChange = (id: number, value: string) => {
+    const handleStatusChange = (id: string, value: string) => {
         setStudents((prev) =>
             prev.map((student) =>
-                student.id === id ? { ...student, status: value } : student
+                student.request_id === id ? { ...student, status: parseInt(value) } : student
             )
         );
     };
@@ -125,15 +103,14 @@ const KhoaPage: React.FC = () => {
     const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
     const currentStudents = students.slice(indexOfFirstStudent, indexOfLastStudent);
 
-    const handleStudentClick = (student: Student) => {
-        openModal(student);
-    };
-
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto">
+            <h1 className="text-center bg-white p-4 font-semibold text-2xl">
+                THÔNG TIN HOÃN THI - VẮNG THI SINH VIÊN
+            </h1>
             <TableKhoa
-                students={students}
-                onStudentClick={handleStudentClick}
+                students={currentStudents}
+                onStudentClick={openModal}
                 onStatusChange={handleStatusChange}
                 onNotesChange={handleNotesChange}
                 onConfirm={handleConfirm}
@@ -143,11 +120,13 @@ const KhoaPage: React.FC = () => {
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
             />
-            <ModalStudent
-                isOpen={isModalOpen}
-                onRequestClose={closeModal}
-                student={selectedStudent}
-            />
+            {selectedStudent && (
+                <ModalStudent
+                    isOpen={isModalOpen}
+                    onRequestClose={closeModal}
+                    student={selectedStudent}
+                />
+            )}
         </div>
     );
 };

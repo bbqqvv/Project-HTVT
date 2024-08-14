@@ -22,12 +22,16 @@ class Request extends Model
         'status',
         'submission_date',
         'evidence',
-        'notes',
+        'student_notes',
+        'faculty_notes',
+        'exam_department_notes',
+        'selected_courses',
         'approved_by'
     ];
 
     protected $casts = [
         'evidence' => 'array',
+        'selected_courses' => 'array', // Đảm bảo Laravel chuyển đổi cột JSON thành mảng
         'submission_date' => 'date'
     ];
 

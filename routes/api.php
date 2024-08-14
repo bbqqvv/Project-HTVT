@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\StudentCourseController;
 
 
 Route::post('/register', [UserController::class, 'register']);
@@ -36,3 +37,10 @@ Route::get('requests/{id}', [RequestController::class, 'show']);
 Route::post('requests', [RequestController::class, 'store']);
 Route::put('requests/{id}', [RequestController::class, 'update']);
 Route::delete('requests/{id}', [RequestController::class, 'destroy']);
+
+
+
+
+Route::get('/student_courses/{student_id}', [StudentCourseController::class, 'index']);
+Route::post('/student_courses', [StudentCourseController::class, 'store']);
+Route::delete('/student_courses/{student_id}/{course_id}', [StudentCourseController::class, 'destroy']);

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('semester_id'); // Khóa ngoại liên kết với bảng semesters
             $table->timestamps();
 
-            // Khóa ngoại
+            // Khóa ngoại       
             $table->foreign('semester_id')->references('semester_id')->on('semesters')->onDelete('cascade');
         });
     }

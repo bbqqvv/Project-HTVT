@@ -1,35 +1,32 @@
 import React from 'react';
 
 interface StatusPanelProps {
-    evidenceUrl: string | null;
-    onImageClick: () => void;
+  evidenceUrls: string[];
+  onImageClick: (url: string) => void;
 }
 
-const StatusPanel: React.FC<StatusPanelProps> = ({ evidenceUrl, onImageClick }) => {
-    return (
-        <div className="w-1/2 bg-white shadow-md rounded-lg p-4">
-            <div className="border-b pb-2 mb-2 text-center font-bold text-gray-600">TRẠNG THÁI</div>
-            <div className='flex justify-between'>
-                <div className='left-status'>
-                    <div className="flex gap-2">
-                        <button className="bg-[#3c9d97] text-white rounded-lg py-1 px-2 hover:bg-[#2c7a7b] transition duration-300">Khoa</button>
-                        <button className="bg-[#3c9d97] text-white rounded-lg py-1 px-2 hover:bg-[#2c7a7b] transition duration-300">P. Khảo Thí</button>
-                    </div>
-                    <div className="mt-4 text-gray-700">Ghi chú của khoa: Bạn cần phải nộp minh chứng</div>
-                </div>
-                <div className='right-status w-[30%]'>
-                    {evidenceUrl && (
-                        <img
-                            src={evidenceUrl}
-                            alt="Evidence"
-                            className="w-full h-auto cursor-pointer"
-                            onClick={onImageClick}
-                        />
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+const StatusPanel: React.FC<StatusPanelProps> = ({ evidenceUrls, onImageClick }) => {
+  return (
+    <div className="w-1/3 bg-white p-4 rounded-lg shadow-md">
+      <h3 className="text-lg font-bold mb-2">Minh chứng đã tải lên</h3>
+      <ul>
+        {evidenceUrls.length > 0 ? (
+          evidenceUrls.map((url, index) => (
+            <li key={index} className="mb-2">
+              <img
+                src={url}
+                alt={`Evidence ${index + 1}`}
+                className="cursor-pointer w-full h-auto"
+                onClick={() => onImageClick(url)} // Gọi hàm với url cụ thể
+              />
+            </li>
+          ))
+        ) : (
+          <li>Chưa có minh chứng nào được tải lên.</li>
+        )}
+      </ul>
+    </div>
+  );
 };
 
 export default StatusPanel;

@@ -5,6 +5,7 @@ import StatusPanel from '../components/StatusPanel';
 import Modal from '../components/Modal';
 import TopNotification from '../components/TopNotification';
 import BottomNotification from '../components/BottomNotification';
+import Pagination from '../components/Pagination';
 
 // Định nghĩa kiểu Student nếu chưa có
 interface Student {
@@ -57,45 +58,61 @@ const KhaoThiPage: React.FC = () => {
     },
     // Thêm dữ liệu mẫu khác nếu cần
   ]);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const studentsPerPage = 8; // Number of students per page
+  const totalPages = Math.ceil(students.length / studentsPerPage);
 
-  const handleModalOpen = () => {
+  const handleConfirm = (id: number) => {
+    const student = students.find((s) => s.id === id);
+    if (student) {
+      alert(`Đã gửi yêu cầu ${student.status} cho sinh viên ${student.name}`);
+    }
+  };
+
+  const openModal = (student: Student) => {
+    setSelectedStudent(student);
     setIsModalOpen(true);
   };
 
-  const handleModalClose = () => {
+  const closeModal = () => {
     setIsModalOpen(false);
-  };
-
-  const handleStudentClick = (student: Student) => {
-    console.log('Student clicked:', student);
-    // Xử lý sự kiện khi nhấp vào sinh viên
-  };
-
-  const handleStatusChange = (id: number, value: string) => {
-    setStudents(prevStudents =>
-      prevStudents.map(student =>
-        student.id === id ? { ...student, status: value } : student
-      )
-    );
+    setSelectedStudent(null);
   };
 
   const handleNotesChange = (id: number, field: 'studentNotes' | 'departmentNotes', value: string) => {
-    setStudents(prevStudents =>
-      prevStudents.map(student =>
+    setStudents((prev) =>
+      prev.map((student) =>
         student.id === id ? { ...student, [field]: value } : student
       )
     );
   };
 
-  const handleConfirm = (id: number) => {
-    console.log('Confirm clicked for student ID:', id);
-    // Xử lý xác nhận
+  const handleStatusChange = (id: number, value: string) => {
+    setStudents((prev) =>
+      prev.map((student) =>
+        student.id === id ? { ...student, status: value } : student
+      )
+    );
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = students.slice(indexOfFirstStudent, indexOfLastStudent);
+
+  const handleStudentClick = (student: Student) => {
+    openModal(student);
   };
 
   return (
     <div className=" bg-gray-100">
-      <TopNotification />
+      <h1 className='text-center bg-white p-4 font-semibold text-2xl'>THÔNG TIN HOÃN THI - VẮNG THI SINH VIÊN </h1>
+
       <TableKhaoThi
         students={students}
         onStudentClick={handleStudentClick}
@@ -103,16 +120,11 @@ const KhaoThiPage: React.FC = () => {
         onNotesChange={handleNotesChange}
         onConfirm={handleConfirm}
       />
-      <div className="flex gap-4 mt-4">
-        <ActionPanel onConfirm={handleModalOpen} onUpload={handleModalOpen} />
-        <StatusPanel />
-      </div>
-      {isModalOpen && (
-        <Modal onClose={handleModalClose} />
-      )}
-      <div className='mt-[8rem]'>
-        <BottomNotification />
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 };
