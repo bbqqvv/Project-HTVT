@@ -1,9 +1,8 @@
-// src/App.tsx
 import React from 'react';
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/shared/Layout';
 import Login from './pages/Login';
-
 import KhoaPage from './pages/KhoaPage';
 import KhaoThiPage from './pages/KhaoThiPage';
 
