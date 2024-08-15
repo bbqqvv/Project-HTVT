@@ -123,9 +123,8 @@ const KhoaPage: React.FC = () => {
             {selectedStudent && (
                 <ModalStudent
                     isOpen={isModalOpen}
-                    onRequestClose={closeModal}
-                    student={selectedStudent}
-                />
+                    onRequestClose={closeModal} 
+                    request={null}                />
             )}
         </div>
     );
