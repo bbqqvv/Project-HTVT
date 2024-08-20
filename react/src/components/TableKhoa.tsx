@@ -1,37 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import Modal from 'react-modal';
+import React, { useCallback, useEffect, useState } from 'react';
+import StudentRequestTable from './StudentRequestTable';
+import ImageModal from './ImageModal';
+import SearchBar from './SearchBar';
+import { CombinedRequestStudent } from './types';
 
-interface Student {
-    request_id: string;
-    student_id: string;
-    request_type: string;
-    status: number;
-    submission_date: string;
-    approved_by: string | null;
-    evidence: string;
-    student_notes: string;
-    faculty_notes: string;
-    exam_department_notes: string;
-    selected_courses: [];
-    created_at: string;
-    updated_at: string;
-    is_confirmed: boolean;  // Trạng thái đã được xác nhận
-    is_updated: boolean;    // Trạng thái đã được cập nhật
-}
-
-interface TableStudentProps {
-    students: Student[];
-    onStudentClick: (student: Student) => void;
-    onStatusChange: (id: string, value: string) => void;
-    onNotesChange: (id: string, field: 'student_notes' | 'faculty_notes' | 'exam_department_notes', value: string) => void;
-    onConfirm: (id: string) => void;
-}
-
-const TableKhoa: React.FC<TableStudentProps> = ({ students, onStudentClick, onStatusChange, onNotesChange, onConfirm }) => {
-    const [data, setData] = useState<Student[]>([]);
+const TableKhoa: React.FC = () => {
+    const [data, setData] = useState<CombinedRequestStudent[]>([]);
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [sortConfig, setSortConfig] = useState<{ key: keyof CombinedRequestStudent; direction: 'ascending' | 'descending' } | null>(null);
 
     const fetchStudents = useCallback(async () => {
         try {
@@ -39,7 +18,7 @@ const TableKhoa: React.FC<TableStudentProps> = ({ students, onStudentClick, onSt
             const responseData = await response.json();
 
             if (Array.isArray(responseData)) {
-                setData(responseData);
+                setData(responseData.filter(student => !student.is_deleted));
             } else {
                 console.error('Dữ liệu không phải là một mảng:', responseData);
             }
@@ -52,15 +31,57 @@ const TableKhoa: React.FC<TableStudentProps> = ({ students, onStudentClick, onSt
         fetchStudents();
     }, [fetchStudents]);
 
+    const handleSort = (key: keyof CombinedRequestStudent) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedData = React.useMemo(() => {
+        let sortableData = [...data];
+        if (sortConfig !== null) {
+            sortableData.sort((a, b) => {
+                const aValue = a[sortConfig.key];
+                const bValue = b[sortConfig.key];
+
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    return sortConfig.direction === 'ascending'
+                        ? aValue.localeCompare(bValue)
+                        : bValue.localeCompare(aValue);
+                } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+                    return sortConfig.direction === 'ascending' ? aValue - bValue : bValue - aValue;
+                } else if (aValue instanceof Date && bValue instanceof Date) {
+                    return sortConfig.direction === 'ascending'
+                        ? aValue.getTime() - bValue.getTime()
+                        : bValue.getTime() - aValue.getTime();
+                }
+
+                return 0;
+            });
+        }
+        return sortableData;
+    }, [data, sortConfig]);
+
+    const filteredData = React.useMemo(() =>
+        sortedData.filter(student =>
+            student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.request_type.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+        [sortedData, searchTerm]
+    );
+
     const handleConfirm = async (id: string) => {
         try {
             const student = data.find((s) => s.request_id === id);
-            if (!student || student.is_confirmed) return;
+            if (!student || student.khoa_checked) return;
 
             const updatedStudent = {
                 ...student,
                 is_confirmed: true,
-                is_updated: true, // Đánh dấu đã được cập nhật
+                is_updated: true,
+                khoa_checked: true,
                 selected_courses: Array.isArray(student.selected_courses) ? student.selected_courses : [],
             };
 
@@ -73,7 +94,6 @@ const TableKhoa: React.FC<TableStudentProps> = ({ students, onStudentClick, onSt
             });
 
             if (response.ok) {
-                // Cập nhật trạng thái của student trong data
                 setData((prevData) =>
                     prevData.map((s) => (s.request_id === id ? { ...s, is_confirmed: true, is_updated: true } : s))
                 );
@@ -88,7 +108,6 @@ const TableKhoa: React.FC<TableStudentProps> = ({ students, onStudentClick, onSt
             console.error('Lỗi khi xác nhận:', error);
         }
     };
-
 
     const openModal = (image: string) => {
         setSelectedImage(image);
@@ -107,107 +126,53 @@ const TableKhoa: React.FC<TableStudentProps> = ({ students, onStudentClick, onSt
         setData(updatedData);
     };
 
-    const handleNotesChange = (id: string, field: 'student_notes' | 'faculty_notes' | 'exam_department_notes', value: string) => {
+    const handleNotesChange = (id: string, field: keyof Student, value: string) => {
         const updatedData = data.map((student) =>
             student.request_id === id && !student.is_updated ? { ...student, [field]: value } : student
         );
         setData(updatedData);
     };
 
+    // Dummy function for student click handling
+    const handleStudentClick = (id: string) => {
+        console.log('Student clicked:', id);
+    };
+
     return (
-        <div className="overflow-x-auto">
+        <div className="container mx-auto">
             {successMessage && (
                 <div className="bg-green-500 text-white p-2 mb-2 rounded">
                     {successMessage}
                 </div>
             )}
-            <table className="min-w-full bg-white border border-gray-300 mt-2 text-xs md:text-sm">
-                <thead>
-                    <tr>
-                        <th className="border px-2 py-2 md:px-4">Mã sinh viên</th>
-                        <th className="border px-2 py-2 md:px-4">Tên sinh viên</th>
-                        <th className="border px-2 py-2 md:px-4">Loại yêu cầu</th>
-                        <th className="border px-2 py-2 md:px-4">Ngày nộp</th>
-                        <th className="border px-2 py-2 md:px-4">Minh chứng</th>
-                        <th className="border px-2 py-2 md:px-4">Ghi chú SV</th>
-                        <th className="border px-2 py-2 md:px-4">Ghi chú KHOA</th>
-                        <th className="border px-2 py-2 md:px-4">Trạng thái</th>
-                        <th className="border px-2 py-2 md:px-4">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((student) => (
-                        <tr
-                            key={student.request_id}
-                            className={`hover:bg-gray-100 ${student.is_confirmed ? 'bg-gray-200' : ''}`}
-                        >
-                            <td className="border px-2 py-2 md:px-4 cursor-pointer" onClick={() => onStudentClick(student)}>
-                                {student.student_id}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4 cursor-pointer" onClick={() => onStudentClick(student)}>
-                                {student.student_id}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4 cursor-pointer" onClick={() => onStudentClick(student)}>
-                                {student.request_type}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4 cursor-pointer" onClick={() => onStudentClick(student)}>
-                                {new Date(student.submission_date).toLocaleDateString()}
-                            </td>
-                            <td className="px-2 py-2 md:px-4 flex justify-center items-center space-x-2">
-                                {JSON.parse(student.evidence).map((image: string, index: number) => (
-                                    <img
-                                        key={index}
-                                        src={`http://127.0.0.1:8000${image.replace(/\\/g, '')}`}
-                                        alt={`evidence-${index}`}
-                                        className="w-12 h-12 cursor-pointer object-cover rounded"
-                                        onClick={() => openModal(`http://127.0.0.1:8000${image.replace(/\\/g, '')}`)}
-                                    />
-                                ))}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4">
-                                <textarea
-                                    className="border rounded p-1 w-full text-xs md:text-sm"
-                                    value={student.student_notes || ""}
-                                    readOnly
-                                />
-                            </td>
-                            <td className="border px-2 py-2 md:px-4">
-                                <input
-                                    className="border rounded p-1 w-full text-xs md:text-sm"
-                                    value={student.faculty_notes || ""}
-                                    onChange={(e) => handleNotesChange(student.request_id, 'faculty_notes', e.target.value)}
-                                    disabled={student.is_updated}
-                                />
-                            </td>
-                            <td className="border px-2 py-2 md:px-4">
-                                <select
-                                    className="border rounded p-1 w-full text-xs md:text-sm"
-                                    value={student.status.toString()}
-                                    onChange={(e) => handleStatusChange(student.request_id, e.target.value)}
-                                    disabled={student.is_updated}
-                                >
-                                    <option value="1">Xét duyệt</option>
-                                    <option value="0">Từ chối</option>
-                                </select>
-                            </td>
-                            <td className="border px-2 py-2 md:px-4">
-                                <button
-                                    onClick={() => handleConfirm(student.request_id)}
-                                    className="bg-green-500 text-white px-2 py-1 rounded text-xs md:text-sm"
-                                    disabled={student.is_confirmed}
-                                >
-                                    Xác nhận
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal">
-                <button onClick={closeModal} className="absolute top-2 right-2 text-xl">×</button>
-                {selectedImage && <img src={selectedImage} alt="Evidence" className="w-full h-full object-contain" />}
-            </Modal>
+            <SearchBar
+                searchTerm={searchTerm}
+                onSearchChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <StudentRequestTable
+                students={filteredData} // Pass filteredData instead of students
+                onStudentClick={handleStudentClick}
+                onStatusChange={handleStatusChange}
+                onNotesChange={handleNotesChange}
+                onConfirm={handleConfirm}
+                searchTerm={searchTerm}
+                sortConfig={sortConfig}
+                handleSort={handleSort}
+                filteredData={filteredData}
+                openModal={openModal}
+                reviewerNotesHeader="Ghi chú Khoa" // Updated header
+                onCheckedChange={function (id: string, value: boolean): void {
+                    throw new Error('Function not implemented.');
+                } }            />
+            <hr />
+            <div className='mt-40'>
+          
+            </div>
+            <ImageModal
+                isOpen={modalIsOpen}
+                onRequestClose={closeModal}
+                selectedImage={selectedImage}
+            />
         </div>
     );
 };

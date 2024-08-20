@@ -1,100 +1,190 @@
-// components/TableKhaoThi.tsx
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import KhoaRequestTable from './KhoaRequestTable';
+import ImageModal from './ImageModal';
+import SearchBar from './SearchBar';
+import { CombinedRequestStudent } from './types';
 
-export interface Student {
-    id: number;
-    studentId: string;
-    name: string;
-    requestType: string;
-    submissionDate: string;
-    certificate: string;
-    studentNotes: string;
-    departmentName: string; // Thêm thông tin khoa duyệt
-    status: string;
-}
+const TableKhaoThi: React.FC = () => {
+    const [data, setData] = useState<CombinedRequestStudent[]>([]);
+    const [modalIsOpen, setModalIsOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [sortConfig, setSortConfig] = useState<{ key: keyof CombinedRequestStudent; direction: 'ascending' | 'descending' } | null>(null);
 
-interface TableKhaoThiProps {
-    students: Student[];
-    onStudentClick: (student: Student) => void;
-    onStatusChange: (id: number, value: string) => void;
-    onNotesChange: (id: number, field: 'studentNotes' | 'departmentNotes', value: string) => void;
-    onConfirm: (id: number) => void;
-}
+    const fetchStudents = useCallback(async () => {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/requests');
+            const responseData = await response.json();
 
-const TableKhaoThi: React.FC<TableKhaoThiProps> = ({ students, onStudentClick, onStatusChange, onNotesChange, onConfirm }) => {
+            if (Array.isArray(responseData)) {
+                setData(responseData.filter(student => !student.is_deleted));
+            } else {
+                console.error('Dữ liệu không phải là một mảng:', responseData);
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy dữ liệu:', error);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchStudents();
+    }, [fetchStudents]);
+
+    const handleSort = (key: keyof CombinedRequestStudent) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedData = React.useMemo(() => {
+        let sortableData = [...data];
+        if (sortConfig !== null) {
+            sortableData.sort((a, b) => {
+                const aValue = a[sortConfig.key];
+                const bValue = b[sortConfig.key];
+
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    return sortConfig.direction === 'ascending'
+                        ? aValue.localeCompare(bValue)
+                        : bValue.localeCompare(aValue);
+                } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+                    return sortConfig.direction === 'ascending' ? aValue - bValue : bValue - aValue;
+                } else if (aValue instanceof Date && bValue instanceof Date) {
+                    return sortConfig.direction === 'ascending'
+                        ? aValue.getTime() - bValue.getTime()
+                        : bValue.getTime() - aValue.getTime();
+                }
+
+                return 0;
+            });
+        }
+        return sortableData;
+    }, [data, sortConfig]);
+
+    const filteredData = React.useMemo(() =>
+        sortedData.filter(student =>
+            student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.request_type.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+        [sortedData, searchTerm]
+    );
+
+    const handleConfirm = async (id: string) => {
+        try {
+            const student = data.find((s) => s.request_id === id);
+            if (!student || student.khaothi_checked) return;
+
+            const updatedStudent = {
+                ...student,
+                is_confirmed: true,
+                is_updated: true,
+                khaothi_checked: true,
+                selected_courses: Array.isArray(student.selected_courses) ? student.selected_courses : [],
+            };
+
+            const response = await fetch(`http://127.0.0.1:8000/api/requests/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedStudent),
+            });
+
+            if (response.ok) {
+                setData((prevData) =>
+                    prevData.map((s) => (s.request_id === id ? { ...s, is_confirmed: true, is_updated: true, khao_checked: true } : s))
+                );
+                setSuccessMessage('Xác nhận thành công!');
+                setTimeout(() => setSuccessMessage(null), 3000);
+            } else {
+                const errorData = await response.json();
+                console.error('Lỗi khi xác nhận:', errorData);
+                setSuccessMessage(null);
+            }
+        } catch (error) {
+            console.error('Lỗi khi xác nhận:', error);
+        }
+    };
+
+    const openModal = (image: string) => {
+        setSelectedImage(image);
+        setModalIsOpen(true);
+    };
+
+    const closeModal = () => {
+        setModalIsOpen(false);
+        setSelectedImage(null);
+    };
+
+    const handleStatusChange = async (id: string, value: string) => {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/requests/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: parseInt(value, 10) }),
+            });
+
+            if (response.ok) {
+                const updatedData = data.map((student) =>
+                    student.request_id === id ? { ...student, status: parseInt(value, 10) } : student
+                );
+                setData(updatedData);
+            } else {
+                console.error('Failed to update status');
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
+    };
+
+    const handleNotesChange = (id: string, field: keyof CombinedRequestStudent, value: string) => {
+        const updatedData = data.map((student) =>
+            student.request_id === id && !student.is_updated ? { ...student, [field]: value } : student
+        );
+        setData(updatedData);
+    };
+
+    const handleStudentClick = (id: string) => {
+        console.log('Student clicked:', id);
+    };
+
     return (
-        <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-300 mt-2">
-                <thead>
-                    <tr>
-                        <th className="border px-2 py-2 md:px-4">STT</th>
-                        <th className="border px-2 py-2 md:px-4">Mã sinh viên</th>
-                        <th className="border px-2 py-2 md:px-4">Tên sinh viên</th>
-                        <th className="border px-2 py-2 md:px-4">Loại yêu cầu</th>
-                        <th className="border px-2 py-2 md:px-4">Ngày nộp</th>
-                        <th className="border px-2 py-2 md:px-4">Minh chứng</th>
-                        <th className="border px-2 py-2 md:px-4">Khoa Duyệt</th> {/* Thêm cột Khoa Duyệt */}
-                        <th className="border px-2 py-2 md:px-4">Ghi chú SV</th>
-                        <th className="border px-2 py-2 md:px-4">Ghi chú Khảo Thí</th>
-                        <th className="border px-2 py-2 md:px-4">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {students.map((student, index) => (
-                        <tr key={student.id} className="hover:bg-gray-100 text-xs md:text-sm">
-                            <td className="border px-2 py-2 md:px-4" onClick={() => onStudentClick(student)}>
-                                {index + 1}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4" onClick={() => onStudentClick(student)}>
-                                {student.studentId}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4" onClick={() => onStudentClick(student)}>
-                                {student.name}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4" onClick={() => onStudentClick(student)}>
-                                {student.requestType}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4" onClick={() => onStudentClick(student)}>
-                                {student.submissionDate}
-                            </td>
-                            <td className="border px-2 py-2 md:px-4">{student.certificate}</td>
-                            <td className="border px-2 py-2 md:px-4">{student.departmentName}</td> {/* Thêm cột Khoa Duyệt */}
-                            <td className="border px-2 py-2 md:px-4">
-                                <textarea
-                                    className="border rounded p-1 w-full text-xs md:text-sm"
-                                    value={student.studentNotes}
-                                    onChange={(e) => onNotesChange(student.id, 'studentNotes', e.target.value)}
-                                />
-                            </td>
-                            <td className="border px-2 py-2 md:px-4">
-                                <textarea
-                                    placeholder='Khoa ghi chú tại đây'
-                                    className="border rounded p-1 w-full text-xs md:text-sm"
-                                    value={""}
-                                    onChange={(e) => onNotesChange(student.id, 'departmentNotes', e.target.value)}
-                                />
-                            </td>
-                            <td className="border px-2 py-2 md:px-4">
-                                <select
-                                    className="border rounded p-1 text-xs md:text-sm"
-                                    value={student.status}
-                                    onChange={(e) => onStatusChange(student.id, e.target.value)}
-                                >
-                                    <option value="Xét duyệt">Xét duyệt</option>
-                                    <option value="Từ chối">Từ chối</option>
-                                    <option value="Chưa xử lý">Chưa xử lý</option>
-                                </select>
-                                <button
-                                    onClick={() => onConfirm(student.id)}
-                                    className="ml-2 bg-green-500 text-white px-2 py-1 rounded text-xs md:text-sm"
-                                >
-                                    Xác nhận
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="container mx-auto">
+            {successMessage && (
+                <div className="bg-green-500 text-white p-2 mb-2 rounded">
+                    {successMessage}
+                </div>
+            )}
+            <SearchBar
+                searchTerm={searchTerm}
+                onSearchChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <KhoaRequestTable
+                students={filteredData}
+                onStudentClick={handleStudentClick}
+                onStatusChange={handleStatusChange}
+                onNotesChange={handleNotesChange}
+                onConfirm={handleConfirm}
+                searchTerm={searchTerm}
+                sortConfig={sortConfig}
+                handleSort={handleSort}
+                filteredData={filteredData}
+                openModal={openModal}
+                reviewerNotesHeader="Khoa duyệt"
+                onCheckedChange={() => {
+                    throw new Error('Function not implemented.');
+                }}
+            />
+            <ImageModal
+                isOpen={modalIsOpen}
+                onRequestClose={closeModal}
+                selectedImage={selectedImage}
+            />
         </div>
     );
 };

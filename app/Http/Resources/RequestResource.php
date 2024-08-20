@@ -20,6 +20,8 @@ class RequestResource extends JsonResource
             'exam_department_notes' => $this->exam_department_notes,
             'approved_by' => $this->approved_by,
             'selected_courses' => $this->selected_courses ? json_decode($this->selected_courses, true) : [],
+            'khoa_checked' => $this->checked,
+            'khaothi_checked' => $this->checked,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

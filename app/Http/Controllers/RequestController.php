@@ -54,6 +54,9 @@ class RequestController extends Controller
             'selected_courses' => 'nullable|array',
             'selected_courses.*' => 'array',
             'approved_by' => 'nullable|string',
+            'khoa_checked' => 'nullable|boolean',
+            'khaothi_checked' => 'nullable|boolean',
+
         ]);
 
         if ($validator->fails()) {
@@ -98,6 +101,10 @@ class RequestController extends Controller
             'selected_courses' => 'nullable|array',
             'selected_courses.*' => 'array',
             'approved_by' => 'nullable|string',
+            'khoa_checked' => 'required|boolean',
+            'khaothi_checked' => 'required|boolean',
+
+
         ]);
 
         if ($validator->fails()) {

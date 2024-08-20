@@ -26,7 +26,10 @@ class Request extends Model
         'faculty_notes',
         'exam_department_notes',
         'selected_courses',
-        'approved_by'
+        'approved_by',
+        'khoa_checked',
+        'khaothi_checked'
+
     ];
 
     protected $casts = [

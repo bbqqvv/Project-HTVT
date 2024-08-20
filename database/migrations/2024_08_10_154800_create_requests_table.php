@@ -20,6 +20,9 @@ return new class extends Migration
             $table->text('faculty_notes')->nullable(); // Thêm cột mới cho faculty_notes
             $table->text('exam_department_notes')->nullable(); // Thêm cột mới cho exam_department_notes
             $table->json('selected_courses')->nullable(); // Cột JSON có thể nhận giá trị null
+            $table->boolean('khoa_checked')->default(false); 
+            $table->boolean('khaothi_checked')->default(false); 
+
             $table->timestamps();
 
             // Foreign key constraints
