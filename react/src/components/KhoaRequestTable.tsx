@@ -33,6 +33,7 @@ const KhoaRequestTable: React.FC<StudentTableProps> = ({
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [updatedRequests, setUpdatedRequests] = useState<CombinedRequestStudent[]>([]);
 
     const handleConfirm = () => {
         if (selectedRequestId) {
@@ -41,6 +42,25 @@ const KhoaRequestTable: React.FC<StudentTableProps> = ({
             toast.success('Yêu cầu đã được xác nhận!');
         }
     };
+
+    const handleStatusChange = (id: string, newValue: string) => {
+        setUpdatedRequests((prev) => {
+            const updatedStudent = filteredData.find(student => student.request_id === id);
+            if (updatedStudent) {
+                return [
+                    ...prev.filter(req => req.request_id !== id),
+                    {
+                        ...updatedStudent,
+                        status: newValue === "1", // Cập nhật trạng thái
+                    }
+                ];
+            }
+            return prev;
+        });
+    
+        onStatusChange(id, newValue); // Gọi hàm để thực hiện thay đổi trạng thái
+    };
+    
 
     return (
         <>
@@ -69,7 +89,7 @@ const KhoaRequestTable: React.FC<StudentTableProps> = ({
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredData.filter(student => student.khoa_checked && student.status == true).map((student) => (
+                    {filteredData.filter(student => student.khoa_checked && student.status == true || updatedRequests.some(req => req.request_id === student.request_id)).map((student) => (
                         <tr
                             key={student.request_id}
                             className={`hover:bg-gray-100 ${student.khaothi_checked ? 'bg-gray-200' : ''}`}
@@ -105,7 +125,7 @@ const KhoaRequestTable: React.FC<StudentTableProps> = ({
                                 <select
                                     className="border rounded p-1 w-full text-xs md:text-sm"
                                     value={student.status.toString()}
-                                    onChange={(e) => onStatusChange(student.request_id, e.target.value)}
+                                    onChange={(e) => handleStatusChange(student.request_id, e.target.value)}
                                     disabled={student.is_updated}
                                 >
                                     <option value="1">Xét duyệt</option>

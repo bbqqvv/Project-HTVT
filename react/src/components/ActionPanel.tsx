@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import Modal from './Modal';
+import Modal from './Modal'; // Modal used for uploading
 import { useUser } from '../context/UserContext';
+import ConfirmationModal from './ConfirmationModal';
 
 interface Course {
     course_id: string;
@@ -15,12 +16,13 @@ interface ActionPanelProps {
 }
 
 const ActionPanel: React.FC<ActionPanelProps> = ({ onConfirm, onUpload, selectedCourses = [], request_type }) => {
-    const { id: student_id } = useUser(); // Lấy id từ context
-    const [student_notes, setStudentNotes] = useState<string>(''); // Đổi studentNotes thành chuỗi
+    const { id: student_id } = useUser(); // Get id from context
+    const [student_notes, setStudentNotes] = useState<string>('');
     const [evidenceFiles, setEvidenceFiles] = useState<File[] | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [evidencePreviews, setEvidencePreviews] = useState<string[]>([]);
+    const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-    // Hàm tạo request_id mới
     const generateRequestId = (): string => {
         const currentCount = Number(localStorage.getItem('request_id_count') || '0');
         const newCount = currentCount + 1;
@@ -29,40 +31,36 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ onConfirm, onUpload, selected
     };
 
     const handleConfirm = async () => {
-        const request_id = generateRequestId(); // Tạo request_id mới
+        const request_id = generateRequestId();
 
-        console.log('Request ID:', request_id);
-        console.log('Loại yêu cầu:', request_type);
-        console.log('Ghi chú của sinh viên:', student_notes);
-        console.log('Tệp minh chứng:', evidenceFiles);
-        console.log('Môn học đã chọn:', selectedCourses);
-        console.log('Student ID:', student_id);
+        if (request_type === 'Vắng thi' && selectedCourses.length === 0) {
+            alert('Vui lòng chọn ít nhất một môn học.');
+            return;
+        }
 
-        if (!student_id) {
-            alert('Student ID không hợp lệ. Vui lòng đăng nhập lại.');
+        if (request_type === 'Hoãn thi' && !evidenceFiles) {
+            alert('Bạn cần tải lên ít nhất một tệp minh chứng.');
             return;
         }
 
         const formData = new FormData();
-        formData.append('request_id', request_id); // Thêm request_id vào formData
-        formData.append('student_notes', student_notes); // Ghi chú của sinh viên là chuỗi đơn
+        formData.append('request_id', request_id);
+        formData.append('student_notes', student_notes);
         formData.append('request_type', request_type);
-        formData.append('student_id', student_id); // Sử dụng student_id từ context
+        formData.append('student_id', student_id);
 
         if (request_type === 'Vắng thi') {
-            // Thêm môn học đã chọn vào formData
             selectedCourses.forEach((course, index) => {
                 formData.append(`selected_courses[${index}][course_id]`, course.course_id);
             });
         } else if (request_type === 'Hoãn thi') {
-            // Lấy tất cả môn học của sinh viên và thêm vào formData
             try {
                 const response = await fetch(`http://127.0.0.1:8000/api/student_courses/${student_id}`);
                 if (!response.ok) {
                     throw new Error('Lỗi khi lấy danh sách môn học');
                 }
                 const data = await response.json();
-                console.log('Dữ liệu nhận được từ API:', data); // Thêm log để kiểm tra dữ liệu
+                console.log('Dữ liệu nhận được từ API:', data);
 
                 if (Array.isArray(data)) {
                     data.forEach((course: { course_id: string }, index: number) => {
@@ -97,7 +95,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ onConfirm, onUpload, selected
 
             if (response.ok) {
                 alert('Dữ liệu đã được gửi thành công!');
-                onConfirm(student_notes, evidenceFiles, selectedCourses); // Gọi hàm onConfirm để thực hiện hành động sau khi gửi dữ liệu thành công
+                onConfirm(student_notes, evidenceFiles, selectedCourses);
+                setIsConfirmationModalOpen(false);
             } else {
                 console.error('Lỗi khi gửi dữ liệu:', data);
                 alert('Có lỗi xảy ra khi gửi dữ liệu.');
@@ -113,15 +112,35 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ onConfirm, onUpload, selected
         }
     };
 
+    const openConfirmationModal = () => {
+        setIsConfirmationModalOpen(true);
+    };
 
-    const handleUpload = () => {
-        setIsModalOpen(true);
+    const closeConfirmationModal = () => {
+        setIsConfirmationModalOpen(false);
+    };
+
+    const openUploadModal = () => {
+        setIsUploadModalOpen(true);
+    };
+
+    const closeUploadModal = () => {
+        setIsUploadModalOpen(false);
     };
 
     const handleFileUpload = (files: File[] | null) => {
-        setEvidenceFiles(files);
+        if (files) {
+            setEvidenceFiles(files);
+
+            // Create preview URLs for the uploaded files
+            const previews = files.map(file => URL.createObjectURL(file));
+            setEvidencePreviews(previews);
+        } else {
+            setEvidenceFiles(null);
+            setEvidencePreviews([]);
+        }
         onUpload(files);
-        setIsModalOpen(false); // Đóng modal sau khi tải lên
+        closeUploadModal();
     };
 
     return (
@@ -129,13 +148,19 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ onConfirm, onUpload, selected
             <div className="flex flex-col gap-4 mb-4 w-2/6">
                 <button
                     className="bg-[#36417A] text-white rounded-lg py-2"
-                    onClick={handleConfirm}
+                    onClick={openConfirmationModal}
                 >
                     Xác nhận
                 </button>
+                <ConfirmationModal
+                    isOpen={isConfirmationModalOpen}
+                    onRequestClose={closeConfirmationModal}
+                    onConfirm={handleConfirm}
+                    message="Bạn có chắc chắn muốn thực hiện hành động này?"
+                />
                 <button
                     className="bg-[#9FA041] text-white rounded-lg py-2"
-                    onClick={handleUpload}
+                    onClick={openUploadModal}
                 >
                     Tải minh chứng
                 </button>
@@ -143,27 +168,44 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ onConfirm, onUpload, selected
             <textarea
                 className="w-full p-2 border rounded-lg"
                 placeholder="Ghi chú của sinh viên nếu có"
-                value={student_notes} // Hiển thị ghi chú của sinh viên
-                onChange={(e) => setStudentNotes(e.target.value)} // Cập nhật giá trị ghi chú
+                value={student_notes}
+                onChange={(e) => setStudentNotes(e.target.value)}
             />
-            <div className='w-4/6'>
-                <h3><b>Môn học đã chọn:</b></h3>
-                <ul className='text-red-600'>
-                    {selectedCourses.length > 0 ? (
-                        selectedCourses.map((course, index) => (
-                            <li key={course.course_id}>{course.course_id}</li>
-                        ))
-                    ) : (
-                        <li>Chưa có môn học nào được chọn.</li>
-                    )}
-                </ul>
+            <div className='w-4/6 flex justify-between'>
+                <div className=''>
+                    <h3><b>Môn học đã chọn:</b></h3>
+                    <ul className='text-red-600'>
+                        {selectedCourses.length > 0 ? (
+                            selectedCourses.map((course, index) => (
+                                <li key={course.course_id}>{course.course_id}</li>
+                            ))
+                        ) : (
+                            <li>Chưa có môn học nào được chọn.</li>
+                        )}
+                    </ul>
+                </div>
+                {isUploadModalOpen && (
+                    <Modal
+                        onClose={closeUploadModal}
+                        onUpload={handleFileUpload}
+                    />
+                )}
+                {evidencePreviews.length > 0 && (
+                    <div className="w-2/6">
+                        <h3><b>Xem trước:</b></h3>
+                        <div className="flex flex-wrap gap-2">
+                            {evidencePreviews.map((preview, index) => (
+                                <img
+                                    key={index}
+                                    src={preview}
+                                    alt={`Preview-${index}`}
+                                    className="w-[60%] object-cover rounded"
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
-            {isModalOpen && (
-                <Modal
-                    onClose={() => setIsModalOpen(false)}
-                    onUpload={handleFileUpload}
-                />
-            )}
         </div>
     );
 };
