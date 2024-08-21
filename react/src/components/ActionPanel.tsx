@@ -205,7 +205,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({ onConfirm, onUpload, selected
                         </div>
                     </div>
                 )}
-            </div>
+            </div>y
         </div>
     );
 };

@@ -139,7 +139,7 @@ const TableKhoa: React.FC = () => {
     };
 
     return (
-        <div className="container mx-auto">
+        <div>
             {successMessage && (
                 <div className="bg-green-500 text-white p-2 mb-2 rounded">
                     {successMessage}

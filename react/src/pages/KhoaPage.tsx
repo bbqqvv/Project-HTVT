@@ -102,7 +102,7 @@ const KhoaPage: React.FC = () => {
     const totalPages = Math.ceil(students.length / studentsPerPage);
 
     return (
-        <div className="container mx-auto">
+        <div >
             <h1 className="text-center bg-white p-4 font-semibold text-2xl">
                 THÔNG TIN HOÃN THI - VẮNG THI SINH VIÊN
             </h1>

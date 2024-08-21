@@ -141,7 +141,7 @@ const TableKhaoThi: React.FC = () => {
     };
 
     return (
-        <div className="container mx-auto">
+        <div className="w-full mx-auto">
             {successMessage && (
                 <div className="bg-green-500 text-white p-2 mb-2 rounded">
                     {successMessage}
