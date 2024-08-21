@@ -59,7 +59,9 @@ const StudentRequestTable: React.FC<StudentTableProps> = ({
                         className={`hover:bg-gray-100 ${student.khoa_checked ? 'bg-gray-200' : ''}`} // Updated class based on checked status
                     >
                         <td className="border px-2 py-2 md:px-4">{student.student_id}</td>
-                        <td className="border px-2 py-2 md:px-4">{student.student_name}</td> {/* Assuming student_name is correct */}
+                        <td className="border px-2 py-2 md:px-4">                                
+                            {student.student?.student_name || 'Không có tên'}
+                        </td> 
                         <td className="border px-2 py-2 md:px-4">{student.request_type}</td>
                         <td className="border px-2 py-2 md:px-4">{student.submission_date}</td>
                         <td className="border px-2 py-2 md:px-4 flex justify-center items-center space-x-2">

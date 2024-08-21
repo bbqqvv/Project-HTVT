@@ -95,7 +95,7 @@ const TableKhaoThi: React.FC = () => {
 
             if (response.ok) {
                 setData((prevData) =>
-                    prevData.map((s) => (s.request_id === id ? { ...s, is_confirmed: true, is_updated: true, khao_checked: true } : s))
+                    prevData.map((s) => (s.request_id === id ? { ...s, is_confirmed: true, is_updated: true } : s))
                 );
                 setSuccessMessage('Xác nhận thành công!');
                 setTimeout(() => setSuccessMessage(null), 3000);
@@ -109,6 +109,7 @@ const TableKhaoThi: React.FC = () => {
         }
     };
 
+
     const openModal = (image: string) => {
         setSelectedImage(image);
         setModalIsOpen(true);
@@ -119,36 +120,22 @@ const TableKhaoThi: React.FC = () => {
         setSelectedImage(null);
     };
 
-    const handleStatusChange = async (id: string, value: string) => {
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/api/requests/${id}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: parseInt(value, 10) }),
-            });
 
-            if (response.ok) {
-                const updatedData = data.map((student) =>
-                    student.request_id === id ? { ...student, status: parseInt(value, 10) } : student
-                );
-                setData(updatedData);
-            } else {
-                console.error('Failed to update status');
-            }
-        } catch (error) {
-            console.error('Error updating status:', error);
-        }
+    const handleStatusChange = (id: string, value: string) => {
+        const updatedData = data.map((student) =>
+            student.request_id === id && !student.is_updated ? { ...student, status: parseInt(value) } : student
+        );
+        setData(updatedData);
     };
 
-    const handleNotesChange = (id: string, field: keyof CombinedRequestStudent, value: string) => {
+    const handleNotesChange = (id: string, field: keyof Student, value: string) => {
         const updatedData = data.map((student) =>
             student.request_id === id && !student.is_updated ? { ...student, [field]: value } : student
         );
         setData(updatedData);
     };
 
+    // Dummy function for student click handling
     const handleStudentClick = (id: string) => {
         console.log('Student clicked:', id);
     };

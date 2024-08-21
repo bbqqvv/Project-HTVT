@@ -7,7 +7,7 @@ import { CombinedRequestStudent } from './types';
 interface StudentTableProps {
     students: CombinedRequestStudent[];
     onStudentClick: (id: string) => void;
-    onStatusChange: (id: string, value: boolean) => void;
+    onStatusChange: (id: string, value: string) => void;
     onCheckedChange: (id: string, value: boolean) => void;
     onNotesChange: (id: string, field: keyof CombinedRequestStudent, value: string) => void;
     onConfirm: (id: string) => void;
@@ -20,7 +20,6 @@ interface StudentTableProps {
 }
 
 const KhoaRequestTable: React.FC<StudentTableProps> = ({
-    onStudentClick,
     onStatusChange,
     onCheckedChange,
     onNotesChange,
@@ -32,36 +31,14 @@ const KhoaRequestTable: React.FC<StudentTableProps> = ({
     reviewerNotesHeader,
 }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [confirmId, setConfirmId] = useState<string | null>(null);
+    const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [pendingStatusChange, setPendingStatusChange] = useState<{ id: string; status: boolean } | null>(null);
 
-    const handleStatusChange = (id: string, value: boolean) => {
-        // Update local state immediately
-        onStatusChange(id, value);
-        // Store pending status change
-        setPendingStatusChange({ id, status: value });
-    };
-
-    const handleConfirmClick = (id: string) => {
-        setConfirmId(id);
-        setIsModalOpen(true);
-    };
-
-    const handleConfirm = async () => {
-        if (confirmId) {
-            setIsLoading(true);
-            try {
-                await onConfirm(confirmId); // Call onConfirm to update database
-                toast.success('Xác nhận yêu cầu thành công!');
-                setPendingStatusChange(null);
-            } catch (error) {
-                toast.error('Không thể xác nhận yêu cầu.');
-            } finally {
-                setIsLoading(false);
-                setConfirmId(null);
-                setIsModalOpen(false);
-            }
+    const handleConfirm = () => {
+        if (selectedRequestId) {
+            onConfirm(selectedRequestId);
+            setIsModalOpen(false);
+            toast.success('Yêu cầu đã được xác nhận!');
         }
     };
 
@@ -92,14 +69,15 @@ const KhoaRequestTable: React.FC<StudentTableProps> = ({
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredData.map((student) => (
+                    {filteredData.filter(student => student.khoa_checked && student.status == true).map((student) => (
                         <tr
                             key={student.request_id}
                             className={`hover:bg-gray-100 ${student.khaothi_checked ? 'bg-gray-200' : ''}`}
-                            onClick={() => onStudentClick(student.request_id)}
                         >
                             <td className="border px-2 py-2 md:px-4">{student.student_id}</td>
-                            <td className="border px-2 py-2 md:px-4">{student.student_name}</td>
+                            <td className="border px-2 py-2 md:px-4">
+                                {student.student?.student_name || 'Không có tên'}
+                            </td>
                             <td className="border px-2 py-2 md:px-4">{student.request_type}</td>
                             <td className="border px-2 py-2 md:px-4">{student.submission_date}</td>
                             <td className="border px-2 py-2 md:px-4 flex justify-center items-center space-x-2">
@@ -127,21 +105,22 @@ const KhoaRequestTable: React.FC<StudentTableProps> = ({
                                 <select
                                     className="border rounded p-1 w-full text-xs md:text-sm"
                                     value={student.status.toString()}
-                                    onChange={(e) => handleStatusChange(student.request_id, e.target.value === 'true')}
+                                    onChange={(e) => onStatusChange(student.request_id, e.target.value)}
                                     disabled={student.is_updated}
                                 >
-                                    <option value="true">Xét duyệt</option>
-                                    <option value="false">Từ chối</option>
+                                    <option value="1">Xét duyệt</option>
+                                    <option value="0">Từ chối</option>
                                 </select>
                             </td>
                             <td className="border px-2 py-2 md:px-4">
                                 <button
-                                    className="bg-green-500 text-white px-2 py-1 rounded text-xs md:text-sm"
-                                    onClick={(e) => { 
-                                        e.stopPropagation();
-                                        handleConfirmClick(student.request_id);
+                                    onClick={() => {
+                                        setSelectedRequestId(student.request_id);
+                                        setIsModalOpen(true);
+                                        onCheckedChange(student.request_id, true);
                                     }}
-                                    disabled={student.is_updated}
+                                    className="bg-green-500 text-white px-2 py-1 rounded text-xs md:text-sm"
+                                    disabled={student.khaothi_checked} // Disable if already checked
                                 >
                                     Xác nhận
                                 </button>

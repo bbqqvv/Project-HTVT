@@ -1,4 +1,5 @@
 export interface CombinedRequestStudent {
+    [x: string]: any;
     student_id: string; // Primary key
     student_name: string; // Tên sinh viên
     faculty_id: string; // Foreign key to faculties table
