@@ -78,11 +78,11 @@ const TableKhoa: React.FC = () => {
             if (!student || student.khoa_checked) return;
 
             const updatedStudent = {
-                ...student,
                 is_confirmed: true,
                 is_updated: true,
                 khoa_checked: true,
-                selected_courses: Array.isArray(student.selected_courses) ? student.selected_courses : [],
+                status: student.status,
+                khaothi_checked: student.khaothi_checked,
             };
 
             const response = await fetch(`http://127.0.0.1:8000/api/requests/${id}`, {
@@ -95,7 +95,11 @@ const TableKhoa: React.FC = () => {
 
             if (response.ok) {
                 setData((prevData) =>
-                    prevData.map((s) => (s.request_id === id ? { ...s, is_confirmed: true, is_updated: true } : s))
+                    prevData.map((s) =>
+                        s.request_id === id
+                            ? { ...s, is_confirmed: true, is_updated: true, khoa_checked: true }
+                            : s
+                    )
                 );
                 setSuccessMessage('Xác nhận thành công!');
                 setTimeout(() => setSuccessMessage(null), 3000);
@@ -163,10 +167,10 @@ const TableKhoa: React.FC = () => {
                 reviewerNotesHeader="Ghi chú Khoa" // Updated header
                 onCheckedChange={function (id: string, value: boolean): void {
                     throw new Error('Function not implemented.');
-                } }            />
+                }} />
             <hr />
             <div className='mt-40'>
-          
+
             </div>
             <ImageModal
                 isOpen={modalIsOpen}

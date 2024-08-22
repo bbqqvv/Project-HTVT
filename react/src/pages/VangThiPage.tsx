@@ -13,18 +13,49 @@ interface Course {
 }
 
 const VangThiPage: React.FC = () => {
-  const { id: student_id } = useUser(); // Lấy id từ context
+  const { id: student_id } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [evidenceUrls, setEvidenceUrls] = useState<string[]>([]);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedCourses, setSelectedCourses] = useState<Course[]>([]);
+  const [status, setStatus] = useState<boolean>(false);
+  const [khaothi_checked, setKhaothiChecked] = useState<boolean>(false);
+  const [khoa_checked, setKhoaChecked] = useState<boolean>(false);
 
   useEffect(() => {
-    return () => {
-      evidenceUrls.forEach(url => URL.revokeObjectURL(url));
+    const fetchData = async () => {
+      console.log('Fetching data for student_id:', student_id);
+
+      if (!student_id) {
+        console.error('No student_id provided');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/requests');
+        const data = await response.json();
+        console.log("API Data:", data);
+
+        const studentRequest = data.find((request: any) => request.student_id === student_id);
+        console.log("Filtered Request Data:", studentRequest);
+
+        if (studentRequest) {
+          setStatus(studentRequest.status === 1);
+          setKhaothiChecked(studentRequest.khaothi_checked === 1);
+          setKhoaChecked(studentRequest.khoa_checked === 1);
+
+        } else {
+          console.log("No request data found for student_id:", student_id);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     };
-  }, [evidenceUrls]);
+
+    fetchData();
+  }, [student_id]);
+
 
   const handleModalOpen = () => {
     setIsModalOpen(true);
@@ -67,7 +98,6 @@ const VangThiPage: React.FC = () => {
     formData.append('request_type', 'Vắng thi');
     formData.append('student_id', student_id);
 
-    // Thêm môn học đã chọn vào formData
     selectedCourses.forEach((course, index) => {
       formData.append(`selected_courses[${index}][course_id]`, course.course_id);
       formData.append(`selected_courses[${index}][course_name]`, course.course_name);
@@ -122,7 +152,9 @@ const VangThiPage: React.FC = () => {
       <ExamTable
         showCheckboxes={true}
         onSelectionChange={handleSelectionChange}
+        student_id={student_id || ''} // Truyền student_id từ state/context
       />
+
       <div className="flex gap-4 mb-6">
         <ActionPanel
           onConfirm={handleConfirm}
@@ -164,7 +196,7 @@ const VangThiPage: React.FC = () => {
           </div>
         </div>
       )}
-      <BottomNotification />
+      <BottomNotification status={status} khaothiChecked={khaothi_checked} khoaChecked={khoa_checked} />
     </div>
   );
 };

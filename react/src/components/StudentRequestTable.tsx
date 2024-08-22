@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { CombinedRequestStudent } from './types';  // Điều chỉnh đường dẫn theo cấu trúc dự án của bạn
-import ModalStudent from '../components/ModalStudent';
+import { CombinedRequestStudent } from './types';  // Adjust the path according to your project structure
+import ModalCourse from './ModalCourse';
 
 interface StudentTableProps {
     students: CombinedRequestStudent[];
     onStudentClick: (id: string) => void;
     onStatusChange: (id: string, value: string) => void;
-    onCheckedChange: (id: string, value: boolean) => void; // Thay đổi kiểu thành boolean
+    onCheckedChange: (id: string, value: boolean) => void; // Changed type to boolean
     onNotesChange: (id: string, field: keyof CombinedRequestStudent, value: string) => void;
     onConfirm: (id: string) => void;
     searchTerm: string;
@@ -29,16 +29,20 @@ const StudentRequestTable: React.FC<StudentTableProps> = ({
     reviewerNotesHeader,
 }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedStudent, setSelectedStudent] = useState<CombinedRequestStudent | null>(null);
+    const [selectedRequest, setSelectedRequest] = useState<CombinedRequestStudent | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedCourses, setSelectedCourses] = useState<any[]>([]); // Adjust type as needed
 
     const handleCellClick = (student: CombinedRequestStudent) => {
-        setSelectedStudent(student);
+        setSelectedRequest(student);
+        setSelectedCourses(student.selected_courses || []); // Assuming `selected_courses` is part of `student`
         setIsModalOpen(true);
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setSelectedStudent(null);
+        setSelectedRequest(null);
     };
 
     return (
@@ -71,7 +75,7 @@ const StudentRequestTable: React.FC<StudentTableProps> = ({
                     {filteredData.map((student) => (
                         <tr
                             key={student.request_id}
-                            className={`hover:bg-gray-100 ${student.khoa_checked ? 'bg-gray-200' : ''}`} // Cập nhật class dựa trên trạng thái checked
+                            className={`hover:bg-gray-100 ${student.khoa_checked ? 'bg-gray-200' : ''}`} // Updated class based on checked status
                         >
                             <td className="border px-2 py-2 md:px-4 cursor-pointer" onClick={() => handleCellClick(student)}>
                                 {student.student_id}
@@ -139,11 +143,14 @@ const StudentRequestTable: React.FC<StudentTableProps> = ({
                 </tbody>
             </table>
 
-            {selectedStudent && (
-                <ModalStudent
+            {selectedRequest && (
+                <ModalCourse
                     isOpen={isModalOpen}
                     onRequestClose={closeModal}
-                    request={selectedStudent}
+                    request={selectedRequest}
+                    loading={loading}
+                    error={error}
+                    selectedCourses={selectedCourses}
                 />
             )}
         </>

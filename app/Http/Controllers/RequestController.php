@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RequestResource;
 use App\Models\Request;
+use App\Models\StudentCourse;
+
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -56,7 +58,6 @@ class RequestController extends Controller
             'approved_by' => 'nullable|string',
             'khoa_checked' => 'nullable|boolean',
             'khaothi_checked' => 'nullable|boolean',
-
         ]);
 
         if ($validator->fails()) {
@@ -79,6 +80,17 @@ class RequestController extends Controller
         $validatedData['selected_courses'] = $httpRequest->has('selected_courses') ? json_encode($httpRequest->input('selected_courses')) : null;
 
         $request = Request::create($validatedData);
+
+        // Cập nhật student_courses
+        if ($httpRequest->has('selected_courses')) {
+            foreach ($httpRequest->input('selected_courses') as $course) {
+                StudentCourse::updateOrCreate(
+                    ['student_id' => $httpRequest->input('student_id'), 'course_id' => $course['course_id']],
+                    []
+                );
+            }
+        }
+
         return response()->json($request, 201);
     }
 
@@ -88,38 +100,35 @@ class RequestController extends Controller
     public function update(HttpRequest $httpRequest, $id)
     {
         $request = Request::find($id);
-
+    
         if (!$request) {
             return response()->json(['message' => 'Request not found'], 404);
         }
-
+    
+        // Xác thực dữ liệu yêu cầu
         $validator = Validator::make($httpRequest->all(), [
             'status' => 'required|boolean',
             'student_notes' => 'nullable|string',
             'faculty_notes' => 'nullable|string',
             'exam_department_notes' => 'nullable|string',
-            'selected_courses' => 'nullable|array',
-            'selected_courses.*' => 'array',
             'approved_by' => 'nullable|string',
             'khoa_checked' => 'required|boolean',
             'khaothi_checked' => 'required|boolean',
-
-
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
-
-        // Cập nhật dữ liệu
+    
+        // Cập nhật dữ liệu mà không bao gồm selected_courses
         $validatedData = $validator->validated();
-        $validatedData['selected_courses'] = $httpRequest->has('selected_courses') ? json_encode($httpRequest->input('selected_courses')) : null;
-
+    
         $request->update($validatedData);
-
+    
         return new RequestResource($request);
     }
-
+    
+    
     /**
      * Xóa một request
      */
