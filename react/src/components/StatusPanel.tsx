@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '../context/UserContext'; // Ensure the path is correct
+import ImageModal from './ImageModal'; // Ensure the path is correct
 
 interface Status {
   id: string;
@@ -18,11 +19,11 @@ interface StatusPanelProps {
 }
 
 const StatusPanel: React.FC<StatusPanelProps> = ({ onImageClick }) => {
+
+  const { id: student_id } = useUser(); // Get student_id from UserContext
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const { id: student_id } = useUser(); // Get student_id from UserContext
-
   const fetchStatuses = async () => {
     try {
       const response = await fetch('http://127.0.0.1:8000/api/requests');
@@ -80,7 +81,6 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onImageClick }) => {
     setIsImageModalOpen(false);
     setSelectedImageUrl(null);
   };
-
   return (
     <div className="w-full md:w-1/3 bg-white p-4 rounded-lg shadow-md space-y-4">
       <div className='flex flex-col md:flex-row gap-4'>
@@ -141,25 +141,13 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onImageClick }) => {
         Ghi chú Khoa: {statuses.length > 0 && statuses[0].faculty_note}
       </div>
 
-      {isImageModalOpen && selectedImageUrl && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-          onClick={handleImageModalClose}
-        >
-          <div
-            className="bg-white p-4 rounded-lg shadow-lg max-w-screen-sm max-h-[90vh] overflow-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            <img src={selectedImageUrl} alt="Selected Evidence" className="w-full h-auto" />
-            <button
-              onClick={handleImageModalClose}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
-            >
-              Đóng
-            </button>
-          </div>
-        </div>
-      )}
+
+      <ImageModal
+        isOpen={isImageModalOpen}
+        imageUrl={selectedImageUrl}
+        onClose={handleImageModalClose}
+      />
+
     </div>
   );
 };

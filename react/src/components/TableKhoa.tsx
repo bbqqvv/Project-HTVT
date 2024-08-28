@@ -3,6 +3,7 @@ import StudentRequestTable from './StudentRequestTable';
 import ImageModal from './ImageModal';
 import SearchBar from './SearchBar';
 import { CombinedRequestStudent } from './types';
+import { toast } from 'react-toastify';
 
 const TableKhoa: React.FC = () => {
     const [data, setData] = useState<CombinedRequestStudent[]>([]);
@@ -71,12 +72,16 @@ const TableKhoa: React.FC = () => {
         ),
         [sortedData, searchTerm]
     );
-
     const handleConfirm = async (id: string) => {
         try {
+            // Find the student by ID
             const student = data.find((s) => s.request_id === id);
-            if (!student || student.khoa_checked) return;
-
+    
+            if (!student || student.khoa_checked) {
+                return;
+            }
+    
+            // Prepare the updated student data
             const updatedStudent = {
                 is_confirmed: true,
                 is_updated: true,
@@ -84,7 +89,8 @@ const TableKhoa: React.FC = () => {
                 status: student.status,
                 khaothi_checked: student.khaothi_checked,
             };
-
+    
+            // Make the API request
             const response = await fetch(`http://127.0.0.1:8000/api/requests/${id}`, {
                 method: 'PUT',
                 headers: {
@@ -92,8 +98,9 @@ const TableKhoa: React.FC = () => {
                 },
                 body: JSON.stringify(updatedStudent),
             });
-
+    
             if (response.ok) {
+                // Update state if the response is OK
                 setData((prevData) =>
                     prevData.map((s) =>
                         s.request_id === id
@@ -101,15 +108,29 @@ const TableKhoa: React.FC = () => {
                             : s
                     )
                 );
+    
+                // Show success message using toast
+                toast.success('Yêu cầu đã được xác nhận!');
+    
+                // Optionally, set a success message in the state
                 setSuccessMessage('Xác nhận thành công!');
                 setTimeout(() => setSuccessMessage(null), 3000);
             } else {
+                // Handle errors from the response
                 const errorData = await response.json();
                 console.error('Lỗi khi xác nhận:', errorData);
                 setSuccessMessage(null);
+    
+                // Show error message using toast
+                toast.error('Lỗi khi xác nhận yêu cầu!');
             }
         } catch (error) {
+            // Handle unexpected errors
             console.error('Lỗi khi xác nhận:', error);
+            setSuccessMessage(null);
+    
+            // Show error message using toast
+            toast.error('Đã xảy ra lỗi!');
         }
     };
 
@@ -130,14 +151,13 @@ const TableKhoa: React.FC = () => {
         setData(updatedData);
     };
 
-    const handleNotesChange = (id: string, field: keyof Student, value: string) => {
+    const handleNotesChange = (id: string, field: keyof CombinedRequestStudent, value: string) => {
         const updatedData = data.map((student) =>
             student.request_id === id && !student.is_updated ? { ...student, [field]: value } : student
         );
         setData(updatedData);
     };
 
-    // Dummy function for student click handling
     const handleStudentClick = (id: string) => {
         console.log('Student clicked:', id);
     };
@@ -154,7 +174,7 @@ const TableKhoa: React.FC = () => {
                 onSearchChange={(e) => setSearchTerm(e.target.value)}
             />
             <StudentRequestTable
-                students={filteredData} // Pass filteredData instead of students
+                students={filteredData}
                 onStudentClick={handleStudentClick}
                 onStatusChange={handleStatusChange}
                 onNotesChange={handleNotesChange}
@@ -164,19 +184,17 @@ const TableKhoa: React.FC = () => {
                 handleSort={handleSort}
                 filteredData={filteredData}
                 openModal={openModal}
-                reviewerNotesHeader="Ghi chú Khoa" // Updated header
-                onCheckedChange={function (id: string, value: boolean): void {
-                    throw new Error('Function not implemented.');
-                }} />
-            <hr />
-            <div className='mt-40'>
-
-            </div>
-            <ImageModal
-                isOpen={modalIsOpen}
-                onRequestClose={closeModal}
-                selectedImage={selectedImage}
+                reviewerNotesHeader="Ghi chú Khoa"
+                onCheckedChange={() => { /* Implement if needed */ }}
             />
+            <hr />
+            {modalIsOpen && selectedImage && (
+                <ImageModal
+                    isOpen={modalIsOpen}
+                    onClose={closeModal}
+                    imageUrl={selectedImage}
+                />
+            )}
         </div>
     );
 };

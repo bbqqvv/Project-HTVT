@@ -17,8 +17,8 @@ class RequestSeeder extends Seeder
                 'request_type' => 'Hoãn thi',
                 'status' => true,
                 'evidence' => json_encode([
-                    'images/evidence1.jpg',
-                    'images/evidence2.jpg',
+                    'https://conganthanhhoa.gov.vn/upload/81582/20200227/965295cbd308a33308577a9067724394.jpg',
+                    'https://cdn.thuvienphapluat.vn//uploads/tintuc/2023/06/25/mau-giay-de-nghi-cap-giay-xac-nhan-so-chung-minh-nhan-dan.png',
                 ]),
                 'student_notes' => 'Gặp vấn đề sức khỏe. Có giấy xác nhận từ bệnh viện.',
                 'faculty_notes' => 'Đã nhận giấy xác nhận từ bệnh viện. Đang chờ phê duyệt.',
@@ -56,7 +56,8 @@ class RequestSeeder extends Seeder
                 'request_type' => 'Vắng thi',
                 'status' => false,
                 'evidence' => json_encode([
-                    'images/evidence3.jpg',
+                    'https://conganthanhhoa.gov.vn/upload/81582/20200227/965295cbd308a33308577a9067724394.jpg',
+                    'https://cdn.thuvienphapluat.vn//uploads/tintuc/2023/06/25/mau-giay-de-nghi-cap-giay-xac-nhan-so-chung-minh-nhan-dan.png',
                 ]),
                 'student_notes' => 'Gia đình có việc gấp.',
                 'faculty_notes' => 'Đã xét duyệt yêu cầu và đồng ý với lý do.',

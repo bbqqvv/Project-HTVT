@@ -47,5 +47,11 @@ Route::get('/student_courses/{student_id}', [StudentCourseController::class, 'in
 Route::post('/student_courses', [StudentCourseController::class, 'store']);
 Route::delete('/student_courses/{student_id}/{course_id}', [StudentCourseController::class, 'destroy']);
 
+// Route::get('courses/{id}', [CourseController::class, 'show']);
+// Route::post('courses', [CourseController::class, 'store']);
+// Route::put('courses/{id}', [CourseController::class, 'update']);
+// Route::delete('courses/{id}', [CourseController::class, 'destroy']);
+Route::post('/courses', [CourseController::class, 'getCoursesByIds']);
+
 
 Route::apiResource('students', StudentController::class);

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RequestResource;
 use App\Models\Request;
+use App\Models\Course;
+
 use App\Models\StudentCourse;
 
 use Illuminate\Http\Request as HttpRequest;
@@ -35,9 +37,19 @@ class RequestController extends Controller
             return response()->json(['message' => 'Request not found'], 404);
         }
 
-        return response()->json($request);
-    }
+        // Xử lý selected_courses để lấy thông tin khóa học
+        $selectedCourseIds = $request->selected_courses ? json_decode($request->selected_courses, true) : [];
+        $courseIds = array_column($selectedCourseIds, 'course_id');
 
+        // Lấy thông tin chi tiết của các khóa học dựa trên ID
+        $courses = Course::whereIn('course_id', $courseIds)->get();
+
+        // Trả về thông tin request và khóa học
+        return response()->json([
+            'request' => $request,
+            'courses' => $courses
+        ]);
+    }
     /**
      * Tạo một request mới
      */

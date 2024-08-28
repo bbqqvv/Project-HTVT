@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Khóa ngoại       
+
             $table->foreign('semester_id')->references('semester_id')->on('semesters')->onDelete('cascade');
         });
     }

@@ -97,7 +97,6 @@ const TableKhaoThi: React.FC = () => {
                 setData((prevData) =>
                     prevData.map((s) => (s.request_id === id ? { ...s, is_confirmed: true, is_updated: true } : s))
                 );
-                setSuccessMessage('Xác nhận thành công!');
                 setTimeout(() => setSuccessMessage(null), 3000);
             } else {
                 const errorData = await response.json();
