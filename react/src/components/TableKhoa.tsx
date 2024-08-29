@@ -76,20 +76,21 @@ const TableKhoa: React.FC = () => {
         try {
             // Find the student by ID
             const student = data.find((s) => s.request_id === id);
-    
+
             if (!student || student.khoa_checked) {
                 return;
             }
-    
-            // Prepare the updated student data
+
+            // Prepare the updated student data, including faculty_notes
             const updatedStudent = {
                 is_confirmed: true,
                 is_updated: true,
                 khoa_checked: true,
                 status: student.status,
                 khaothi_checked: student.khaothi_checked,
+                faculty_notes: student.faculty_notes // Ensure this is included
             };
-    
+
             // Make the API request
             const response = await fetch(`http://127.0.0.1:8000/api/requests/${id}`, {
                 method: 'PUT',
@@ -98,7 +99,7 @@ const TableKhoa: React.FC = () => {
                 },
                 body: JSON.stringify(updatedStudent),
             });
-    
+
             if (response.ok) {
                 // Update state if the response is OK
                 setData((prevData) =>
@@ -108,10 +109,10 @@ const TableKhoa: React.FC = () => {
                             : s
                     )
                 );
-    
+
                 // Show success message using toast
                 toast.success('Yêu cầu đã được xác nhận!');
-    
+
                 // Optionally, set a success message in the state
                 setSuccessMessage('Xác nhận thành công!');
                 setTimeout(() => setSuccessMessage(null), 3000);
@@ -120,7 +121,7 @@ const TableKhoa: React.FC = () => {
                 const errorData = await response.json();
                 console.error('Lỗi khi xác nhận:', errorData);
                 setSuccessMessage(null);
-    
+
                 // Show error message using toast
                 toast.error('Lỗi khi xác nhận yêu cầu!');
             }
@@ -128,7 +129,7 @@ const TableKhoa: React.FC = () => {
             // Handle unexpected errors
             console.error('Lỗi khi xác nhận:', error);
             setSuccessMessage(null);
-    
+
             // Show error message using toast
             toast.error('Đã xảy ra lỗi!');
         }
